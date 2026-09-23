@@ -13,7 +13,7 @@ public sealed class ReferentialApiTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         _client = await _factory.CreateAuthenticatedClientAsync();
-        _data = await ReferenceDataSet.LoadAsync(_factory, _client);
+        _data = await ReferenceDataSet.LoadAsync(_client);
     }
 
     public Task DisposeAsync()

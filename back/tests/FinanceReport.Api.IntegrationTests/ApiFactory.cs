@@ -36,7 +36,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
 
     public string LogPath => Path.Combine(DataPath, "logs");
 
-    public FakeTimeProvider Time { get; } = new(new DateTimeOffset(2026, 9, 23, 7, 0, 0, TimeSpan.Zero));
+    public FakeTimeProvider Time { get; private init; } = new(new DateTimeOffset(2026, 9, 23, 7, 0, 0, TimeSpan.Zero));
+
+    /// <summary>API dont l'horloge simulée démarre à <paramref name="utcNow"/>.</summary>
+    public static ApiFactory StartingAt(DateTimeOffset utcNow) => new() { Time = new FakeTimeProvider(utcNow) };
 
     public string FilePath(string entityName) => Path.Combine(DataPath, $"{entityName}.json");
 
@@ -47,6 +50,13 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         var token = await SetupAndLoginAsync(client);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return client;
+    }
+
+    /// <summary>Avance l'horloge simulée puis reconnecte le client, dont le jeton de 8 h a pu expirer.</summary>
+    public async Task MoveClockAsync(HttpClient client, DateTimeOffset utcNow)
+    {
+        Time.SetUtcNow(utcNow);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await LoginAsync(client));
     }
 
     public static async Task<string> SetupAndLoginAsync(HttpClient client)

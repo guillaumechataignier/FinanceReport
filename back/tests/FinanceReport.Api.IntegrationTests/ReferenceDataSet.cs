@@ -1,16 +1,8 @@
 using FinanceReport.Application.Dtos;
-using FinanceReport.Application.Services;
-using FinanceReport.Domain.Abstractions;
-using FinanceReport.Domain.Entities;
-using FinanceReport.Domain.Enums;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace FinanceReport.Api.IntegrationTests;
 
-/// <summary>
-/// Jeu de données de référence (TestPlan §1.3), chargé par l'API. Les mouvements et le cours de S1 sont écrits
-/// directement dans les dépôts tant que les endpoints de mouvements et de cours n'existent pas (phase 5).
-/// </summary>
+/// <summary>Jeu de données de référence (TestPlan §1.3), entièrement chargé par l'API.</summary>
 internal sealed class ReferenceDataSet
 {
     public Guid E1 { get; private set; }
@@ -20,11 +12,12 @@ internal sealed class ReferenceDataSet
     public Guid C { get; private set; }
     public Guid S1 { get; private set; }
     public Guid S2 { get; private set; }
-    public Guid M1 { get; } = Guid.NewGuid();
-    public Guid M2 { get; } = Guid.NewGuid();
-    public Guid M3 { get; } = Guid.NewGuid();
+    public Guid M1 { get; private set; }
+    public Guid M2 { get; private set; }
+    public Guid M3 { get; private set; }
 
-    public static async Task<ReferenceDataSet> LoadAsync(ApiFactory factory, HttpClient client)
+    /// <param name="withPrice">Saisit le cours de S1 au 22/09/2026 (impossible si l'horloge simulée est antérieure).</param>
+    public static async Task<ReferenceDataSet> LoadAsync(HttpClient client, bool withPrice = true)
     {
         var data = new ReferenceDataSet();
 
@@ -38,50 +31,28 @@ internal sealed class ReferenceDataSet
         data.S1 = await CreateSecurity(client, "ETF Monde", "LU1681043599", "ETF", "MONDE", "DIVERSIFIE");
         data.S2 = await CreateSecurity(client, "Bitcoin", "BTC", "CRYPTO", "MONDE", "NON_APPLICABLE");
 
+        data.M1 = await CreateTrade(client, "ACHAT", "2026-01-10", data.A, data.S1, 10m, 100.00m, 2.00m);
+        data.M2 = await CreateTrade(client, "ACHAT", "2026-02-10", data.A, data.S1, 5m, 110.00m, 1.00m);
+        data.M3 = await CreateTrade(client, "VENTE", "2026-03-10", data.A, data.S1, 6m, 120.00m, 1.50m);
+
         await client.PutJsonAsync<BalanceDto>($"/api/accounts/{data.B}/balances/2026-09-01", new { amount = 5000.00m });
         await client.PutJsonAsync<BalanceDto>($"/api/accounts/{data.C}/balances/2026-01-01", new { amount = 1000.00m });
         await client.PutJsonAsync<BalanceDto>($"/api/accounts/{data.A}/balances/2026-09-01", new { amount = 200.00m });
         await client.PostJsonAsync<AccountDto>($"/api/accounts/{data.C}/archive");
 
-        await data.SeedMovementsAndPriceAsync(factory);
+        if (withPrice)
+        {
+            await client.PutJsonAsync<PriceDto>($"/api/securities/{data.S1}/prices/2026-09-22", new { price = 115.00m });
+        }
+
         return data;
     }
 
-    private async Task SeedMovementsAndPriceAsync(ApiFactory factory)
-    {
-        var services = factory.Services;
-        var now = factory.Time.GetUtcNow();
-        Movement Trade(Guid id, MovementType type, DateOnly date, decimal quantity, decimal price, decimal fees, long sequence) => new()
-        {
-            Id = id,
-            Type = type,
-            Date = date,
-            AccountId = A,
-            SecurityId = S1,
-            Quantity = quantity,
-            UnitPrice = price,
-            Fees = fees,
-            Sequence = sequence,
-            CreatedAt = now,
-            UpdatedAt = now,
-        };
-
-        await services.GetRequiredService<IUnitOfWork>().ExecuteAsync(() =>
-        {
-            services.GetRequiredService<IRepository<Movement>>().Save(
-            [
-                Trade(M1, MovementType.Achat, new DateOnly(2026, 1, 10), 10m, 100.00m, 2.00m, 1),
-                Trade(M2, MovementType.Achat, new DateOnly(2026, 2, 10), 5m, 110.00m, 1.00m, 2),
-                Trade(M3, MovementType.Vente, new DateOnly(2026, 3, 10), 6m, 120.00m, 1.50m, 3),
-            ]);
-            services.GetRequiredService<IRepository<SecurityPrice>>().Save(
-            [
-                new SecurityPrice { SecurityId = S1, Date = new DateOnly(2026, 9, 22), Price = 115.00m, UpdatedAt = now },
-            ]);
-            services.GetRequiredService<SnapshotService>().Rebuild(new DateOnly(2026, 1, 10));
-            return 0;
-        });
-    }
+    public static async Task<Guid> CreateTrade(
+        HttpClient client, string type, string date, Guid accountId, Guid securityId, decimal quantity, decimal unitPrice, decimal fees) =>
+        (await client.PostJsonAsync<MovementDto>(
+            "/api/movements",
+            new { type, date, accountId, securityId, quantity, unitPrice, fees })).Id;
 
     private static async Task<Guid> CreateAccount(HttpClient client, string name, string type, Guid institutionId) =>
         (await client.PostJsonAsync<AccountDto>("/api/accounts", new { name, type, institutionId })).Id;
