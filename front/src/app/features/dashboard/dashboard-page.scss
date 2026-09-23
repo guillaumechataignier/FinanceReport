@@ -1,0 +1,67 @@
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cash-note {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--fr-gain);
+
+  &.excluded {
+    color: var(--fr-warning);
+  }
+}
+
+.allocations {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+  }
+}
+
+.table-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 14px 4px;
+}
+
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.missing {
+  display: inline-flex;
+  vertical-align: -3px;
+  margin-right: 4px;
+  color: var(--fr-warning);
+}
+
+.total td {
+  font-weight: 600;
+  border-bottom: none;
+}
+
+.empty {
+  text-align: center;
+  color: var(--fr-muted);
+}

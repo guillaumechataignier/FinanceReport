@@ -4,7 +4,6 @@ import { authGuard, loginGuard, setupGuard } from './core/auth/auth.guards';
 import { Shell } from './core/layout/shell';
 import { LoginPage } from './features/auth/login-page';
 import { SetupPage } from './features/auth/setup-page';
-import { PlaceholderPage } from './shared/placeholder-page/placeholder-page';
 
 const referentialKind: CanMatchFn = (_route, segments) => ['zones', 'sectors', 'institutions'].includes(segments[1]?.path);
 
@@ -17,8 +16,17 @@ export const routes: Routes = [
     component: Shell,
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', component: PlaceholderPage, data: { title: 'Accueil' }, title: 'Accueil · FinanceReport' },
-      { path: 'dashboard', component: PlaceholderPage, data: { title: 'Tableau de bord' }, title: 'Tableau de bord · FinanceReport' },
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage),
+        title: 'Accueil · FinanceReport',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+        title: 'Tableau de bord · FinanceReport',
+      },
       {
         path: 'movements',
         loadComponent: () => import('./features/movements/movements-page').then((m) => m.MovementsPage),

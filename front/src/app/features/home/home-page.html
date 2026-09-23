@@ -1,0 +1,113 @@
+<div class="page">
+  <app-page-header [title]="greeting()" [subtitle]="summary() ? 'Données au ' + (summary()!.date | dateFr) : ''">
+    <a class="btn btn-primary" routerLink="/movements" [queryParams]="{ new: 1 }"><app-icon name="plus" />Nouveau mouvement</a>
+  </app-page-header>
+
+  @if (summary(); as s) {
+    @if (s.missingPriceCount > 0) {
+      <a class="banner" routerLink="/prices" role="status">
+        <app-icon name="warning" />
+        {{ s.missingPriceCount }} position(s) sans cours, valorisée(s) au PRU.
+        <span class="banner-link">Saisir les cours</span>
+      </a>
+    }
+
+    @if (!hasData()) {
+      <section class="card empty-state">
+        <h2 class="card-title">Bienvenue dans FinanceReport</h2>
+        <p class="muted">Aucune donnée pour l'instant. Commencez par créer votre premier compte.</p>
+        <a class="btn btn-primary" routerLink="/accounts"><app-icon name="plus" />Créer un compte</a>
+      </section>
+    }
+
+    <div class="tiles">
+      <section class="card tile">
+        <h2 class="tile-label">Patrimoine total</h2>
+        <p class="tile-value num">{{ s.totalNetWorth | amountFr }}</p>
+        <p class="tile-sub">Comptes non archivés, au {{ s.date | dateFr }}</p>
+      </section>
+      <section class="card tile">
+        <h2 class="tile-label">Variation du mois</h2>
+        @if (s.monthVariation; as v) {
+          <p class="tile-value num" [class]="gainClass(v.amount)">{{ v.amount | amountFr: true }}</p>
+          <p class="tile-sub">Depuis le {{ v.referenceDate | dateFr }}</p>
+        } @else {
+          <p class="tile-value">N/A</p>
+          <p class="tile-sub">Aucun snapshot avant le début du mois</p>
+        }
+      </section>
+      <section class="card tile">
+        <h2 class="tile-label">Variation du mois (%)</h2>
+        <p class="tile-value num" [class]="gainClass(s.monthVariation?.percent)">{{ s.monthVariation?.percent | percentFr: true }}</p>
+        <p class="tile-sub">
+          @if (s.monthVariation; as v) {
+            Par rapport au {{ v.referenceDate | dateFr }}
+          } @else {
+            Variation non calculable
+          }
+        </p>
+      </section>
+      <section class="card tile">
+        <h2 class="tile-label">Plus-value latente</h2>
+        <p class="tile-value num" [class]="gainClass(s.unrealizedGain.amount)">{{ s.unrealizedGain.amount | amountFr: true }}</p>
+        <p class="tile-sub">
+          @if (s.unrealizedGain.percent !== null) {
+            {{ s.unrealizedGain.percent | percentFr: true }} du coût d'acquisition
+          } @else {
+            Aucune position
+          }
+        </p>
+      </section>
+    </div>
+
+    <div class="charts">
+      <section class="card chart-card">
+        <div class="card-head">
+          <h2 class="card-title">Évolution du patrimoine</h2>
+          <div class="segmented" role="group" aria-label="Période">
+            @for (p of periods; track p.value) {
+              <button type="button" [attr.aria-pressed]="period() === p.value" (click)="period.set(p.value)">{{ p.label }}</button>
+            }
+          </div>
+        </div>
+        @if (series(); as data) {
+          <div class="line" role="img" aria-label="Évolution du patrimoine total">
+            <ngx-charts-area-chart
+              [results]="data"
+              [scheme]="chartColors"
+              [xAxis]="true"
+              [yAxis]="true"
+              [autoScale]="true"
+              [gradient]="true"
+              [animations]="false"
+              [xAxisTickFormatting]="formatAxisDate"
+              [yAxisTickFormatting]="formatAxisAmount"
+            >
+              <ng-template #tooltipTemplate let-model="model">
+                <div class="tip">{{ formatTooltipDate(model.name) }} · {{ model.value | amountFr }}</div>
+              </ng-template>
+              <ng-template #seriesTooltipTemplate let-model="model">
+                <div class="tip">{{ formatTooltipDate(model[0].name) }} · {{ model[0].value | amountFr }}</div>
+              </ng-template>
+            </ngx-charts-area-chart>
+          </div>
+        } @else {
+          <p class="empty">Historique insuffisant pour tracer une courbe.</p>
+        }
+      </section>
+
+      <section class="card types-card">
+        <h2 class="card-title">Répartition par type de compte</h2>
+        <app-donut-chart
+          [shares]="typeShares()"
+          [size]="180"
+          [vertical]="true"
+          centerLabel="Total"
+          [centerValue]="s.totalNetWorth"
+          ariaLabel="Répartition par type de compte"
+          emptyMessage="Aucun compte."
+        />
+      </section>
+    </div>
+  }
+</div>

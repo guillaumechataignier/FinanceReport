@@ -1,0 +1,115 @@
+<div class="page">
+  <app-page-header title="Tableau de bord" [subtitle]="'Données au ' + (today | dateFr)" />
+
+  <div class="filters" role="group" aria-label="Filtres">
+    <app-filter-menu label="Comptes" [options]="accountOptions()" [(selected)]="accountIds" />
+    <app-filter-menu label="Types de support" [options]="typeOptions" [(selected)]="securityTypes" />
+    <app-filter-menu label="Zones" allLabel="Toutes" [options]="zoneOptions()" [(selected)]="zones" />
+    <app-filter-menu label="Secteurs" [options]="sectorOptions()" [(selected)]="sectors" />
+    @if (data(); as d) {
+      <span class="cash-note" [class.excluded]="!d.includesCash">
+        {{ d.includesCash ? 'Espèces et liquidités incluses' : 'Espèces et liquidités exclues (filtre de support actif)' }}
+      </span>
+    }
+  </div>
+
+  <div class="allocations">
+    @for (allocation of allocations(); track allocation.title) {
+      <section class="card">
+        <h2 class="card-title">{{ allocation.title }}</h2>
+        <app-donut-chart [shares]="allocation.shares" [vertical]="true" [ariaLabel]="allocation.title" />
+      </section>
+    }
+  </div>
+
+  <section class="card table-card">
+    <div class="table-head">
+      <h2 class="card-title">Positions</h2>
+      <span class="muted">{{ positions().length }} position{{ positions().length > 1 ? 's' : '' }}</span>
+    </div>
+    <table class="table">
+      <thead>
+        <tr>
+          @for (column of columns; track column.key) {
+            <th scope="col" [class.right]="column.numeric" [attr.aria-sort]="ariaSort(column.key)">
+              <button type="button" class="sort" (click)="sortBy(column.key)">
+                {{ column.label }}
+                @if (ariaSort(column.key); as direction) {
+                  <app-icon [name]="direction === 'ascending' ? 'sortUp' : 'sortDown'" [size]="14" />
+                }
+              </button>
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of positions(); track p.accountId + p.securityId) {
+          <tr>
+            <td>{{ p.accountName }}</td>
+            <td>
+              <span class="strong">{{ p.securityName }}</span>
+              <div class="sub">{{ p.securityCode }}</div>
+            </td>
+            <td class="right num">{{ p.quantity | quantityFr }}</td>
+            <td class="right num">{{ p.averageCost | priceFr: priceDecimals(p.securityType) }}</td>
+            <td class="right num">
+              @if (p.missingPrice) {
+                <span class="missing" matTooltip="Cours manquant, valorisé au PRU" tabindex="0" aria-label="Cours manquant, valorisé au PRU">
+                  <app-icon name="warning" [size]="16" />
+                </span>
+              }
+              {{ p.price | priceFr: priceDecimals(p.securityType) }}
+            </td>
+            <td class="right num">{{ p.priceDate | dateFr }}</td>
+            <td class="right num strong">{{ p.marketValue | amountFr }}</td>
+            <td class="right num" [class]="gainClass(p.unrealizedGain)">{{ p.unrealizedGain | amountFr: true }}</td>
+            <td class="right num" [class]="gainClass(p.unrealizedGainPercent)">{{ p.unrealizedGainPercent | percentFr: true }}</td>
+          </tr>
+        } @empty {
+          <tr><td class="empty" colspan="9">Aucune position pour ces filtres.</td></tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  @if (accountsTable(); as table) {
+    <section class="card table-card">
+      <div class="table-head"><h2 class="card-title">Comptes</h2></div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Compte</th>
+            <th scope="col">Type</th>
+            <th scope="col" class="right">Valeur</th>
+            <th scope="col" class="right">PV latente</th>
+            <th scope="col" class="right">PV réalisée cumulée</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of table.accounts; track a.accountId) {
+            <tr>
+              <td class="strong">{{ a.name }}</td>
+              <td><span class="badge">{{ a.type }}</span></td>
+              <td class="right num">{{ a.value | amountFr }}</td>
+              <td class="right num" [class]="gainClass(a.unrealizedGain)">{{ a.unrealizedGain | amountFr: true }}</td>
+              <td class="right num" [class]="gainClass(a.realizedGain)">{{ a.realizedGain | amountFr: true }}</td>
+            </tr>
+          } @empty {
+            <tr><td class="empty" colspan="5">Aucun compte.</td></tr>
+          }
+        </tbody>
+        @if (table.accounts.length > 0) {
+          <tfoot>
+            <tr class="total">
+              <td>Total</td>
+              <td></td>
+              <td class="right num">{{ table.total.value | amountFr }}</td>
+              <td class="right num" [class]="gainClass(table.total.unrealizedGain)">{{ table.total.unrealizedGain | amountFr: true }}</td>
+              <td class="right num" [class]="gainClass(table.total.realizedGain)">{{ table.total.realizedGain | amountFr: true }}</td>
+            </tr>
+          </tfoot>
+        }
+      </table>
+    </section>
+  }
+</div>
