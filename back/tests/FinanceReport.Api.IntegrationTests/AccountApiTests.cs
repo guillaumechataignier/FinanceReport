@@ -169,5 +169,6 @@ public sealed class AccountApiTests : IAsyncLifetime
 
         Directory.GetFiles(accountsBackups).Should().HaveCount(100);
         Directory.Exists(Path.Combine(_factory.DataPath, "backups", "credentials")).Should().BeFalse();
+        Directory.Exists(Path.Combine(_factory.DataPath, "backups", "snapshots")).Should().BeFalse("les snapshots sont recalculables");
     }
 }

@@ -2,7 +2,7 @@
 
 |Élément|Valeur|
 |---|---|
-|Version|1.3 – MVP|
+|Version|1.4 – MVP|
 |Date|23/09/2026|
 |Documents sources|`docs/brd/BRD.md` v1.1, `docs/functional/FunctionalSpecifications.md` v1.2|
 
@@ -14,6 +14,7 @@
 |1.1|23/09/2026|Référentiels administrables : fichiers `zones.json`, `sectors.json`, `institutions.json`, initialisation par défaut, `ReferentialService`, `institutionId` sur les comptes, suppression des enums `Zone` et `Sector`.|
 |1.2|23/09/2026|`institutionId` obligatoire sur un compte.|
 |1.3|23/09/2026|Montée de version de la stack : .NET 10 LTS / C# 14 (au lieu de .NET 8, fin de support le 10/11/2026), Angular 22, tests unitaires front sous Vitest (outil par défaut d'Angular 22, à la place de Jasmine/Karma), FluentAssertions 7.x (licence Apache 2.0).|
+|1.4|23/09/2026|Allègement des fichiers : JSON écrit sans indentation ; `snapshots.json` n'est plus sauvegardé et se restaure depuis le cache en cas d'échec d'une opération (sections 2.1, 2.5, 2.6). Mesure TC-TECH-07 : 271 Mo → 188 Mo.|
 
 ---
 
@@ -87,7 +88,7 @@ data/
     └── ...
 ```
 
-Chaque fichier (hors `credentials.json`) a une enveloppe commune :
+Les fichiers sont écrits en JSON compact (sans indentation). Chaque fichier (hors `credentials.json`) a une enveloppe commune :
 
 json
 
@@ -209,7 +210,7 @@ json
     2. sérialisation vers `fichier.tmp` ;
     3. `File.Move(tmp, fichier, overwrite: true)` (remplacement atomique) ;
     4. mise à jour du cache.
-- **Échec** : si une étape échoue, le cache est rechargé depuis le disque et l'erreur est propagée (500). Les fichiers déjà écrits dans l'opération sont restaurés depuis la sauvegarde prise à l'étape 1.
+- **Échec** : si une étape échoue, le cache est rechargé depuis le disque et l'erreur est propagée (500). Les fichiers déjà écrits dans l'opération sont restaurés depuis la sauvegarde prise à l'étape 1 ; `snapshots.json`, qui n'est pas sauvegardé, est réécrit depuis le cache, qui contient encore l'état validé avant l'opération (ou supprimé s'il n'existait pas).
 
 ### 2.6 Sauvegardes (RG-19)
 
@@ -217,6 +218,7 @@ json
 - **Contenu** : une copie du fichier **avant** modification. Rien n'est copié si le fichier n'existe pas encore.
 - **Purge** : après la copie, les fichiers du dossier sont triés par nom décroissant et seuls les 100 premiers sont conservés (`Storage:BackupRetention = 100`).
 - `credentials.json` n'est pas sauvegardé, car il contient une clé secrète.
+- `snapshots.json` n'est pas sauvegardé : il se recalcule entièrement à partir des autres fichiers, et sa taille (un détail des positions par jour) rendrait 100 copies coûteuses en disque.
 
 ---
 

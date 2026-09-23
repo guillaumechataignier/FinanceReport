@@ -10,19 +10,28 @@ namespace FinanceReport.Infrastructure.Persistence;
 /// <summary>
 /// Collection persistée dans <c>{DataPath}/{entity}.json</c>, chargée au premier accès puis gardée en cache (TS §2.5).
 /// Les écritures passent par <see cref="UnitOfWork"/> : dans une opération, <see cref="GetAll"/> voit les éléments en attente.
+/// Une collection sans sauvegarde (<c>snapshots</c>, entièrement recalculable) est restaurée depuis son cache en cas d'échec.
 /// </summary>
 public sealed class JsonFileStore<T> : IRepository<T>, IJsonFileStore
 {
     private readonly BackupService _backupService;
+    private readonly bool _backupEnabled;
     private readonly ILogger _logger;
     private readonly Lock _loadLock = new();
     private IReadOnlyList<T>? _items;
 
-    public JsonFileStore(string entityName, IOptions<StorageOptions> options, BackupService backupService, ILogger<JsonFileStore<T>> logger)
+    /// <param name="backupEnabled">Copie horodatée avant chaque écriture (RG-19) ; désactivée pour les snapshots.</param>
+    public JsonFileStore(
+        string entityName,
+        IOptions<StorageOptions> options,
+        BackupService backupService,
+        ILogger<JsonFileStore<T>> logger,
+        bool backupEnabled = true)
     {
         EntityName = entityName;
         FilePath = Path.Combine(options.Value.DataPath, $"{entityName}.json");
         _backupService = backupService;
+        _backupEnabled = backupEnabled;
         _logger = logger;
     }
 
@@ -52,30 +61,40 @@ public sealed class JsonFileStore<T> : IRepository<T>, IJsonFileStore
         context.Stage(this, items.ToArray());
     }
 
-    string? IJsonFileStore.WriteToDisk(object items)
+    RestorePoint IJsonFileStore.WriteToDisk(object items)
     {
         var list = (IReadOnlyList<T>)items;
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
 
-        var backupPath = _backupService.Backup(FilePath, EntityName);
-        var tempPath = FilePath + ".tmp";
-        try
+        var fileExisted = File.Exists(FilePath);
+        if (fileExisted && !_backupEnabled)
         {
-            using (var stream = File.Create(tempPath))
-            {
-                JsonSerializer.Serialize(stream, new JsonEnvelope<T>(JsonEnvelope<T>.CurrentSchemaVersion, list), JsonDefaults.Options);
-            }
+            // Sans sauvegarde, l'état antérieur doit être en cache avant d'écraser le fichier.
+            GetCommitted();
+        }
 
-            File.Move(tempPath, FilePath, overwrite: true);
-        }
-        catch
-        {
-            TryDelete(tempPath);
-            throw;
-        }
+        var restorePoint = new RestorePoint(fileExisted, _backupEnabled ? _backupService.Backup(FilePath, EntityName) : null);
+        WriteAtomically(list);
 
         _logger.LogInformation("Fichier {Entity} écrit : {Count} élément(s)", EntityName, list.Count);
-        return backupPath;
+        return restorePoint;
+    }
+
+    void IJsonFileStore.Restore(RestorePoint restorePoint)
+    {
+        if (!restorePoint.FileExisted)
+        {
+            File.Delete(FilePath);
+        }
+        else if (restorePoint.BackupPath is not null)
+        {
+            File.Copy(restorePoint.BackupPath, FilePath, overwrite: true);
+        }
+        else
+        {
+            // Sans sauvegarde, le cache contient encore l'état validé avant l'opération.
+            WriteAtomically(GetCommitted());
+        }
     }
 
     void IJsonFileStore.Accept(object items)
@@ -93,6 +112,27 @@ public sealed class JsonFileStore<T> : IRepository<T>, IJsonFileStore
 
         Load();
         Version++;
+    }
+
+    private IReadOnlyList<T> GetCommitted() => _items ?? Load();
+
+    private void WriteAtomically(IReadOnlyList<T> items)
+    {
+        var tempPath = FilePath + ".tmp";
+        try
+        {
+            using (var stream = File.Create(tempPath))
+            {
+                JsonSerializer.Serialize(stream, new JsonEnvelope<T>(JsonEnvelope<T>.CurrentSchemaVersion, items), JsonDefaults.Options);
+            }
+
+            File.Move(tempPath, FilePath, overwrite: true);
+        }
+        catch
+        {
+            TryDelete(tempPath);
+            throw;
+        }
     }
 
     private IReadOnlyList<T> Load()

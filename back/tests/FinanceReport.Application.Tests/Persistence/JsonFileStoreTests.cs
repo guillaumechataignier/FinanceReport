@@ -39,7 +39,9 @@ public sealed class JsonFileStoreTests : IDisposable
 
         await _harness.WriteAsync(store, [movement]);
 
-        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(_harness.FilePath("movements")));
+        var content = await File.ReadAllTextAsync(_harness.FilePath("movements"));
+        content.Should().NotContain("\n", "le JSON est écrit sans indentation");
+        using var document = JsonDocument.Parse(content);
         var root = document.RootElement;
         root.GetProperty("schemaVersion").GetInt32().Should().Be(1);
         var item = root.GetProperty("items")[0];

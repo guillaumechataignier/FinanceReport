@@ -34,8 +34,8 @@ internal sealed class StorageHarness : IDisposable
 
     public UnitOfWork UnitOfWork { get; }
 
-    public JsonFileStore<T> Store<T>(string entityName) =>
-        new(entityName, Options, Backups, NullLogger<JsonFileStore<T>>.Instance);
+    public JsonFileStore<T> Store<T>(string entityName, bool backupEnabled = true) =>
+        new(entityName, Options, Backups, NullLogger<JsonFileStore<T>>.Instance, backupEnabled);
 
     public Task WriteAsync<T>(JsonFileStore<T> store, IReadOnlyList<T> items) =>
         UnitOfWork.ExecuteAsync(() => { store.Save(items); return items.Count; });

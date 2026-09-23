@@ -5,7 +5,8 @@ namespace FinanceReport.Infrastructure.Persistence;
 
 /// <summary>
 /// Verrou global des opérations d'écriture et validation « tout ou rien » des fichiers modifiés (TS §2.5) :
-/// en cas d'échec, les fichiers déjà écrits sont restaurés depuis leur sauvegarde et les caches rechargés.
+/// en cas d'échec, les fichiers déjà écrits sont restaurés (depuis leur sauvegarde, ou depuis le cache pour une
+/// collection sans sauvegarde) et les caches rechargés.
 /// </summary>
 public sealed class UnitOfWork(ILogger<UnitOfWork> logger) : IUnitOfWork
 {
@@ -41,7 +42,7 @@ public sealed class UnitOfWork(ILogger<UnitOfWork> logger) : IUnitOfWork
     private void Commit(OperationContext context)
     {
         var staged = context.Staged.ToList();
-        var written = new List<(IJsonFileStore Store, string? BackupPath)>();
+        var written = new List<(IJsonFileStore Store, RestorePoint RestorePoint)>();
         try
         {
             foreach (var (store, items) in staged)
@@ -52,9 +53,9 @@ public sealed class UnitOfWork(ILogger<UnitOfWork> logger) : IUnitOfWork
         catch (Exception ex)
         {
             logger.LogError(ex, "Échec d'écriture : restauration de {Count} fichier(s)", written.Count);
-            foreach (var (store, backupPath) in written)
+            foreach (var (store, restorePoint) in written)
             {
-                Restore(store, backupPath);
+                Restore(store, restorePoint);
             }
 
             foreach (var (store, _) in staged)
@@ -71,19 +72,11 @@ public sealed class UnitOfWork(ILogger<UnitOfWork> logger) : IUnitOfWork
         }
     }
 
-    private void Restore(IJsonFileStore store, string? backupPath)
+    private void Restore(IJsonFileStore store, RestorePoint restorePoint)
     {
         try
         {
-            if (backupPath is null)
-            {
-                // Le fichier n'existait pas avant l'opération.
-                File.Delete(store.FilePath);
-            }
-            else
-            {
-                File.Copy(backupPath, store.FilePath, overwrite: true);
-            }
+            store.Restore(restorePoint);
         }
         catch (Exception ex)
         {

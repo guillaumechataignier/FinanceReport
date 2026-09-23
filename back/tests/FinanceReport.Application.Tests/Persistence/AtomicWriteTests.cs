@@ -58,6 +58,41 @@ public sealed class AtomicWriteTests : IDisposable
     }
 
     [Fact]
+    public async Task Store_without_backup_is_restored_from_its_cache()
+    {
+        var snapshots = _harness.Store<Account>("snapshots", backupEnabled: false);
+        var movements = _harness.Store<Account>("movements");
+        await _harness.WriteAsync(snapshots, [_harness.NewAccount("initial")]);
+        var initialContent = await File.ReadAllTextAsync(_harness.FilePath("snapshots"));
+
+        // Nouvelle instance : le cache est vide jusqu'à l'écriture, qui doit le charger avant d'écraser le fichier.
+        snapshots = _harness.Store<Account>("snapshots", backupEnabled: false);
+        Directory.CreateDirectory(_harness.FilePath("movements") + ".tmp");
+
+        var act = () => _harness.UnitOfWork.ExecuteAsync(() =>
+        {
+            snapshots.Save([_harness.NewAccount("recalculé")]);
+            movements.Save([_harness.NewAccount("mouvement")]);
+            return 0;
+        });
+
+        await act.Should().ThrowAsync<Exception>();
+        (await File.ReadAllTextAsync(_harness.FilePath("snapshots"))).Should().Be(initialContent);
+        snapshots.GetAll().Should().ContainSingle().Which.Name.Should().Be("initial");
+    }
+
+    [Fact] // RG-19 : snapshots.json n'est pas sauvegardé
+    public async Task Store_without_backup_takes_no_copy()
+    {
+        var snapshots = _harness.Store<Account>("snapshots", backupEnabled: false);
+
+        await _harness.WriteAsync(snapshots, [_harness.NewAccount("A")]);
+        await _harness.WriteAsync(snapshots, [_harness.NewAccount("B")]);
+
+        _harness.BackupFiles("snapshots").Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Store_version_changes_on_each_commit()
     {
         var store = _harness.Store<Account>("accounts");

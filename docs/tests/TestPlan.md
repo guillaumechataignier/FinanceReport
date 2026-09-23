@@ -2,9 +2,9 @@
 
 |Élément|Valeur|
 |---|---|
-|Version|1.2 – MVP|
+|Version|1.3 – MVP|
 |Date|23/09/2026|
-|Documents sources|`docs/functional/FunctionalSpecifications.md` v1.2 (RG-01 à RG-30), `docs/technical/TechnicalSpecifications.md` v1.2|
+|Documents sources|`docs/functional/FunctionalSpecifications.md` v1.4 (RG-01 à RG-30), `docs/technical/TechnicalSpecifications.md` v1.4|
 
 **Historique des versions**
 
@@ -13,6 +13,7 @@
 |1.0|23/09/2026|Version initiale|
 |1.1|23/09/2026|Référentiels administrables : JDR complété (établissement E1), TC-FUNC-20 réécrit, ajout de TC-FUNC-28 à TC-FUNC-30, couverture de RG-30 et UC-14.|
 |1.2|23/09/2026|Établissement obligatoire : JDR complété (E2, établissement de chaque compte), TC-FUNC-29 réécrit.|
+|1.3|23/09/2026|TC-TECH-02 : aucune sauvegarde de `snapshots.json` (RG-19 v1.4).|
 
 ---
 
@@ -546,7 +547,7 @@ Ce jeu est utilisé par plusieurs tests. La date du jour simulée est le **23/09
     2. Une sauvegarde contenant l'état **avant** modification.
     3. `data/backups/accounts/` contient exactement 100 fichiers, les plus récents.
     
-    - Aucune sauvegarde n'est créée pour `credentials.json`.
+    - Aucune sauvegarde n'est créée pour `credentials.json` ni pour `snapshots.json`.
 
 #### [TC-TECH-03] Absence de secrets dans les logs, rotation journalière
 

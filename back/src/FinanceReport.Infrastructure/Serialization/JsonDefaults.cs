@@ -7,12 +7,10 @@ public static class JsonDefaults
 {
     /// <summary>
     /// camelCase, enums en majuscules (AccountType.Cto → "CTO", MovementType.Achat → "ACHAT"),
-    /// DateOnly au format YYYY-MM-DD, décimaux en nombres JSON (TS §2.3).
+    /// DateOnly au format YYYY-MM-DD, décimaux en nombres JSON (TS §2.3). JSON compact, sans indentation,
+    /// pour limiter la taille des fichiers et de leurs sauvegardes.
     /// </summary>
-    public static JsonSerializerOptions Options { get; } = Configure(new JsonSerializerOptions(JsonSerializerDefaults.Web)
-    {
-        WriteIndented = true,
-    });
+    public static JsonSerializerOptions Options { get; } = Configure(new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
     public static JsonSerializerOptions Configure(JsonSerializerOptions options)
     {

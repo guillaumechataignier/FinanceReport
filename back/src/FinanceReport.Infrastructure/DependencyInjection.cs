@@ -28,7 +28,8 @@ public static class DependencyInjection
         services.AddStore<Security>("securities");
         services.AddStore<Movement>("movements");
         services.AddStore<SecurityPrice>("prices");
-        services.AddStore<Snapshot>("snapshots");
+        // Les snapshots se recalculent entièrement à partir des autres fichiers : pas de sauvegarde (RG-19).
+        services.AddStore<Snapshot>("snapshots", backupEnabled: false);
 
         services.AddSingleton<ReferentialRepository>();
         services.AddSingleton<IReferentialRepository>(sp => sp.GetRequiredService<ReferentialRepository>());
@@ -42,13 +43,14 @@ public static class DependencyInjection
         return services;
     }
 
-    private static void AddStore<T>(this IServiceCollection services, string entityName)
+    private static void AddStore<T>(this IServiceCollection services, string entityName, bool backupEnabled = true)
     {
         services.AddSingleton(sp => new JsonFileStore<T>(
             entityName,
             sp.GetRequiredService<IOptions<StorageOptions>>(),
             sp.GetRequiredService<BackupService>(),
-            sp.GetRequiredService<ILogger<JsonFileStore<T>>>()));
+            sp.GetRequiredService<ILogger<JsonFileStore<T>>>(),
+            backupEnabled));
         services.AddSingleton<IRepository<T>>(sp => sp.GetRequiredService<JsonFileStore<T>>());
     }
 }
