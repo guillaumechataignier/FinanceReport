@@ -2,7 +2,7 @@
 
 |Élément|Valeur|
 |---|---|
-|Version|1.3 – MVP|
+|Version|1.4 – MVP|
 |Date|23/09/2026|
 |Documents sources|`docs/functional/FunctionalSpecifications.md` v1.4 (RG-01 à RG-30), `docs/technical/TechnicalSpecifications.md` v1.4|
 
@@ -14,6 +14,7 @@
 |1.1|23/09/2026|Référentiels administrables : JDR complété (établissement E1), TC-FUNC-20 réécrit, ajout de TC-FUNC-28 à TC-FUNC-30, couverture de RG-30 et UC-14.|
 |1.2|23/09/2026|Établissement obligatoire : JDR complété (E2, établissement de chaque compte), TC-FUNC-29 réécrit.|
 |1.3|23/09/2026|TC-TECH-02 : aucune sauvegarde de `snapshots.json` (RG-19 v1.4).|
+|1.4|23/09/2026|Matrice de traçabilité renseignée après l'implémentation du MVP ; section 4 « Résultats de la recette ».|
 
 ---
 
@@ -74,44 +75,44 @@ Ce jeu est utilisé par plusieurs tests. La date du jour simulée est le **23/09
 
 |Règle de gestion|ID test associé|Titre du cas de test|Statut de validation|
 |---|---|---|---|
-|**RG-01** (EUR unique)|TC-FUNC-01|Absence de champ devise et affichage en euros|À valider|
-|**RG-02** (Précision)|TC-FUNC-02|Rejet des saisies dépassant la précision autorisée|À valider|
-|**RG-03** (PRU à l'achat)|TC-FUNC-03|Calcul du PRU en PMP frais inclus|À valider|
-|**RG-04** (Vente et PRU)|TC-FUNC-03, TC-FUNC-04|PRU inchangé après vente et remise à zéro de la position soldée|À valider|
-|**RG-05** (PV réalisée)|TC-FUNC-05|Calcul de la plus-value réalisée|À valider|
-|**RG-06** (PV latente)|TC-FUNC-06|Calcul de la plus-value latente en € et en %|À valider|
-|**RG-07** (Valeur compte titres)|TC-FUNC-07|Valeur d'un compte titres = positions + liquidités|À valider|
-|**RG-08** (Valeur compte espèces)|TC-FUNC-07|Valeur d'un compte espèces = dernier solde|À valider|
-|**RG-09** (Patrimoine total)|TC-FUNC-07|Patrimoine total hors comptes archivés|À valider|
-|**RG-10** (Vente excédentaire)|TC-FUNC-08|Rejet d'une vente supérieure à la quantité détenue|À valider|
-|**RG-11** (Cours manquant)|TC-FUNC-09|Valorisation au PRU et indicateur de cours manquant|À valider|
-|**RG-12** (Suppression support)|TC-FUNC-10|Suppression interdite d'un support utilisé et archivage|À valider|
-|**RG-13** (Recalcul rétroactif)|TC-FUNC-11, TC-FUNC-12, TC-FUNC-28|Recalcul des snapshots, rejet d'une modification incohérente, absence de recalcul sur un référentiel|À valider|
-|**RG-14** (Snapshot quotidien)|TC-FUNC-13|Un seul snapshot par jour, écrasé|À valider|
-|**RG-15** (Variation du mois)|TC-FUNC-14|Calcul de la variation du mois et cas N/A|À valider|
-|**RG-16** (Compte d'accès unique)|TC-FUNC-15|Initialisation unique du compte d'accès|À valider|
-|**RG-17** (JWT 8 h)|TC-TECH-01|Protection des endpoints et expiration du jeton|À valider|
-|**RG-18** (Blocage)|TC-FUNC-16|Blocage de 15 minutes après 5 échecs|À valider|
-|**RG-19** (Sauvegardes)|TC-TECH-02, TC-FUNC-28|Sauvegarde avant écriture et rétention de 100 versions|À valider|
-|**RG-20** (Logs sans secret)|TC-TECH-03|Absence de secrets dans les logs, rotation journalière|À valider|
-|**RG-21** (Compte titres requis, type figé)|TC-FUNC-17|Mouvements interdits sur un compte espèces et type figé|À valider|
-|**RG-22** (Liquidités non automatiques)|TC-FUNC-18|Les mouvements ne modifient pas les liquidités|À valider|
-|**RG-23** (Cours et solde retenus)|TC-FUNC-19|Sélection du dernier cours ou solde à date|À valider|
-|**RG-24** (Valeurs issues des référentiels)|TC-FUNC-20, TC-FUNC-29|Zone, secteur ou établissement inexistant ou archivé|À valider|
-|**RG-25** (Pas de date future)|TC-FUNC-21|Rejet des dates futures|À valider|
-|**RG-26** (Unicité)|TC-FUNC-22|Unicité du code support et du nom de compte|À valider|
-|**RG-27** (Compte archivé)|TC-FUNC-07, TC-FUNC-23|Exclusion puis réintégration d'un compte archivé|À valider|
-|**RG-28** (Filtres et liquidités)|TC-FUNC-24|Exclusion des espèces quand un filtre de support est actif|À valider|
-|**RG-29** (Arrondis)|TC-FUNC-25|Arrondi au demi supérieur à l'affichage uniquement|À valider|
-|**RG-30** (Gestion des référentiels)|TC-FUNC-28, TC-FUNC-29|Création, modification, archivage et suppression des valeurs de référentiel|À valider|
-|Atomicité (TS 2.5)|TC-TECH-04|Aucune écriture partielle en cas d'échec|À valider|
-|Réseau local (TS 1.2)|TC-TECH-05|Écoute sur localhost uniquement et CORS restreint|À valider|
-|Format d'erreur (FS 4.1)|TC-TECH-06|Format d'erreur unique et codes HTTP|À valider|
-|Performance (BRD 4.1)|TC-TECH-07|Temps de réponse inférieur à 2 s sur le volume cible|À valider|
-|Courbe (UC-12)|TC-FUNC-26|Courbe d'évolution par période et historique insuffisant|À valider|
-|Historique mouvements (UC-09)|TC-FUNC-27|Filtrage de l'historique des mouvements|À valider|
-|Référentiels (UC-14)|TC-FUNC-28, TC-FUNC-29|Gestion des référentiels|À valider|
-|Initialisation des référentiels (FS 3.11, TS 2.4)|TC-FUNC-30|Valeurs initiales créées une seule fois|À valider|
+|**RG-01** (EUR unique)|TC-FUNC-01|Absence de champ devise et affichage en euros|Validé (E2E)|
+|**RG-02** (Précision)|TC-FUNC-02|Rejet des saisies dépassant la précision autorisée|Validé (TU, TI)|
+|**RG-03** (PRU à l'achat)|TC-FUNC-03|Calcul du PRU en PMP frais inclus|Validé (TU, TI, E2E)|
+|**RG-04** (Vente et PRU)|TC-FUNC-03, TC-FUNC-04|PRU inchangé après vente et remise à zéro de la position soldée|Validé (TU)|
+|**RG-05** (PV réalisée)|TC-FUNC-05|Calcul de la plus-value réalisée|Validé (TU, TI, E2E)|
+|**RG-06** (PV latente)|TC-FUNC-06|Calcul de la plus-value latente en € et en %|Validé (TU, TI, E2E)|
+|**RG-07** (Valeur compte titres)|TC-FUNC-07|Valeur d'un compte titres = positions + liquidités|Validé (TU, TI, E2E)|
+|**RG-08** (Valeur compte espèces)|TC-FUNC-07|Valeur d'un compte espèces = dernier solde|Validé (TU, TI)|
+|**RG-09** (Patrimoine total)|TC-FUNC-07|Patrimoine total hors comptes archivés|Validé (TU, TI, E2E)|
+|**RG-10** (Vente excédentaire)|TC-FUNC-08|Rejet d'une vente supérieure à la quantité détenue|Validé (TU, TI, E2E)|
+|**RG-11** (Cours manquant)|TC-FUNC-09|Valorisation au PRU et indicateur de cours manquant|Validé (TU, TI, E2E)|
+|**RG-12** (Suppression support)|TC-FUNC-10|Suppression interdite d'un support utilisé et archivage|Validé (TI ; recette manuelle de l'interface)|
+|**RG-13** (Recalcul rétroactif)|TC-FUNC-11, TC-FUNC-12, TC-FUNC-28|Recalcul des snapshots, rejet d'une modification incohérente, absence de recalcul sur un référentiel|Validé (TI)|
+|**RG-14** (Snapshot quotidien)|TC-FUNC-13|Un seul snapshot par jour, écrasé|Validé (TU, TI)|
+|**RG-15** (Variation du mois)|TC-FUNC-14|Calcul de la variation du mois et cas N/A|Validé (TU, TI)|
+|**RG-16** (Compte d'accès unique)|TC-FUNC-15|Initialisation unique du compte d'accès|Validé (TI, E2E)|
+|**RG-17** (JWT 8 h)|TC-TECH-01|Protection des endpoints et expiration du jeton|Validé (TI, E2E)|
+|**RG-18** (Blocage)|TC-FUNC-16|Blocage de 15 minutes après 5 échecs|Validé (TU, TI ; interface vérifiée manuellement)|
+|**RG-19** (Sauvegardes)|TC-TECH-02, TC-FUNC-28|Sauvegarde avant écriture et rétention de 100 versions|Validé (TI)|
+|**RG-20** (Logs sans secret)|TC-TECH-03|Absence de secrets dans les logs, rotation journalière|Validé partiellement (TI) : rotation journalière non simulée|
+|**RG-21** (Compte titres requis, type figé)|TC-FUNC-17|Mouvements interdits sur un compte espèces et type figé|Validé (TI)|
+|**RG-22** (Liquidités non automatiques)|TC-FUNC-18|Les mouvements ne modifient pas les liquidités|Validé (TU, TI)|
+|**RG-23** (Cours et solde retenus)|TC-FUNC-19|Sélection du dernier cours ou solde à date|Validé (TU)|
+|**RG-24** (Valeurs issues des référentiels)|TC-FUNC-20, TC-FUNC-29|Zone, secteur ou établissement inexistant ou archivé|Validé (TI) ; contrôles E2E de TC-FUNC-20 (6) et TC-FUNC-29 (10) à faire en recette manuelle|
+|**RG-25** (Pas de date future)|TC-FUNC-21|Rejet des dates futures|Validé (TI)|
+|**RG-26** (Unicité)|TC-FUNC-22|Unicité du code support et du nom de compte|Validé (TI)|
+|**RG-27** (Compte archivé)|TC-FUNC-07, TC-FUNC-23|Exclusion puis réintégration d'un compte archivé|Validé (TU, TI, E2E)|
+|**RG-28** (Filtres et liquidités)|TC-FUNC-24|Exclusion des espèces quand un filtre de support est actif|Validé (TI, E2E)|
+|**RG-29** (Arrondis)|TC-FUNC-25|Arrondi au demi supérieur à l'affichage uniquement|Validé (TU, TI)|
+|**RG-30** (Gestion des référentiels)|TC-FUNC-28, TC-FUNC-29|Création, modification, archivage et suppression des valeurs de référentiel|Validé (TI, TU front) ; contrôle E2E de TC-FUNC-28 à faire en recette manuelle|
+|Atomicité (TS 2.5)|TC-TECH-04|Aucune écriture partielle en cas d'échec|Validé (TI)|
+|Réseau local (TS 1.2)|TC-TECH-05|Écoute sur localhost uniquement et CORS restreint|Validé (TI pour CORS ; écoute localhost vérifiée manuellement)|
+|Format d'erreur (FS 4.1)|TC-TECH-06|Format d'erreur unique et codes HTTP|Validé (TI)|
+|Performance (BRD 4.1)|TC-TECH-07|Temps de réponse inférieur à 2 s sur le volume cible|Validé (TI) : p95 ≤ 25 ms, recalcul de 3 650 snapshots en 1,8 s|
+|Courbe (UC-12)|TC-FUNC-26|Courbe d'évolution par période et historique insuffisant|Validé (TI, TU front)|
+|Historique mouvements (UC-09)|TC-FUNC-27|Filtrage de l'historique des mouvements|Validé (TI)|
+|Référentiels (UC-14)|TC-FUNC-28, TC-FUNC-29|Gestion des référentiels|Validé (TI, TU front, E2E)|
+|Initialisation des référentiels (FS 3.11, TS 2.4)|TC-FUNC-30|Valeurs initiales créées une seule fois|Validé (TI)|
 
 ---
 
@@ -607,3 +608,22 @@ Ce jeu est utilisé par plusieurs tests. La date du jour simulée est le **23/09
 - **Résultat attendu** :
     - Le p95 est inférieur à 2 s pour chaque endpoint de restitution.
     - La modification rétroactive se termine en moins de 5 s. Ce seuil technique est proposé et doit être validé.
+
+---
+
+## 4. Résultats de la recette (23/09/2026)
+
+|Niveau|Outil|Commande|Résultat|
+|---|---|---|---|
+|TU back|xUnit|`dotnet test back/FinanceReport.sln`|95 tests (domaine, stockage, services)|
+|TI back|WebApplicationFactory|`dotnet test back/FinanceReport.sln`|112 tests, dont TC-TECH-07 (volume cible)|
+|TU front|Vitest|`cd front && npm test`|48 tests|
+|E2E|Playwright (Chrome)|`cd front && npm run e2e`|10 étapes : JDR saisi par l'interface, puis accueil et tableau de bord au centime|
+
+**Contrôles restant en recette manuelle** :
+
+- TC-TECH-03 : création d'un nouveau fichier de journal au changement de jour (Serilog utilise l'horloge système).
+- TC-TECH-05, étape 1 : refus d'une connexion depuis une autre machine (vérifié le 23/09/2026 : écoute sur 127.0.0.1 et ::1 uniquement).
+- TC-FUNC-20 (6), TC-FUNC-28 (contrôle E2E), TC-FUNC-29 (10) : affichage « (archivé) » dans les formulaires, corbeille et code verrouillé dans l'écran « Référentiels », invitation à créer un établissement. Ces comportements sont couverts par des tests unitaires du front.
+- TC-FUNC-16 dans l'interface : compte à rebours pendant le blocage (vérifié le 23/09/2026 dans le navigateur ; couvert par un test unitaire du front).
+

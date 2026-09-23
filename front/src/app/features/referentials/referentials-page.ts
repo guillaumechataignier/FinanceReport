@@ -75,10 +75,17 @@ export class ReferentialsPage {
     return panel?.mode === 'edit' && panel.item.usageCount > 0;
   });
 
+  /** « Nouvelle zone », « Nouveau secteur », « Nouvel établissement ». */
+  protected readonly newLabel = computed(() => {
+    const { feminine, singular } = this.info();
+    const adjective = feminine ? 'Nouvelle' : /^[aeéiou]/i.test(singular) ? 'Nouvel' : 'Nouveau';
+    return `${adjective} ${singular}`;
+  });
+
   protected readonly panelTitle = computed(() => {
     const { feminine, singular } = this.info();
     if (this.panel()?.mode !== 'edit') {
-      return `${feminine ? 'Nouvelle' : 'Nouveau'} ${singular}`;
+      return this.newLabel();
     }
 
     const article = /^[aeéiou]/i.test(singular) ? "l'" : feminine ? 'la ' : 'le ';

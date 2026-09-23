@@ -19,7 +19,7 @@ export interface FilterOption {
       <app-icon name="sortDown" [size]="14" />
     </button>
     <mat-menu #menu="matMenu" class="filter-panel">
-      <div class="options" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" role="group" [attr.aria-label]="label()">
+      <div class="options" (click)="$event.stopPropagation()" (keydown)="keepMenuOpen($event)" role="group" [attr.aria-label]="label()">
         @for (option of options(); track option.value) {
           <label class="option">
             <input type="checkbox" [checked]="selected().includes(option.value)" (change)="toggle(option.value)" />
@@ -64,6 +64,13 @@ export class FilterMenu {
 
     return `${selected.length} sélectionnés`;
   });
+
+  /** Les cases gardent le menu ouvert ; Échap et Tab le ferment comme d'habitude. */
+  protected keepMenuOpen(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' && event.key !== 'Tab') {
+      event.stopPropagation();
+    }
+  }
 
   protected toggle(value: string): void {
     this.selected.update((current) => (current.includes(value) ? current.filter((v) => v !== value) : [...current, value]));

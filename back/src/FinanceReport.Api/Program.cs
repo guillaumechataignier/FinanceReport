@@ -44,10 +44,18 @@ await app.Services.GetRequiredService<ReferentialSeeder>().SeedAsync();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseSerilogRequestLogging(options => options.Logger = app.Services.GetRequiredService<Serilog.ILogger>());
 app.UseStatusCodePages(context => ErrorResponses.WriteForStatusCodeAsync(context.HttpContext));
+
+// Production locale (TS §1.2) : le front compilé, copié dans wwwroot, est servi par l'API.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireAuthorization();
+
+// Routes du front (/accounts, /dashboard…) : index.html, sauf sous /api où une route inconnue reste un 404.
+app.MapFallbackToFile("{*path:nonfile:regex(^(?!api(/|$)).*$)}", "index.html");
 
 await app.RunAsync();
 

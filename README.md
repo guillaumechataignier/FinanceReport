@@ -16,6 +16,14 @@ Application web personnelle, exécutée en local, de suivi de patrimoine et de p
 - SDK .NET 10
 - Node.js 24 et npm
 
+## Lancement (production locale)
+
+```bash
+scripts/run.sh
+```
+
+Le script compile le front, le copie dans l'API, puis démarre l'application sur `http://localhost:5080`. Les données sont écrites dans `data/` et les journaux dans `logs/`, à la racine du dépôt. Pour relancer sans recompiler le front : `scripts/run.sh --skip-build`.
+
 ## Lancement en développement
 
 ```bash
@@ -28,7 +36,7 @@ L'API écoute sur `http://localhost:5080`.
 cd front && npm install && npm start
 ```
 
-Le front est servi sur `http://localhost:4200`.
+Le front est servi sur `http://localhost:4200` et transmet les appels `/api` à l'API (`front/proxy.conf.json`). Si le port 4200 est déjà pris : `npm start -- --port 4300`.
 
 ## Tests
 
@@ -39,6 +47,14 @@ dotnet test back/FinanceReport.sln
 ```bash
 cd front && npm test
 ```
+
+Tests de bout en bout (Playwright avec le Chrome installé, application compilée et démarrée sur un dossier de données vierge, port 5099) :
+
+```bash
+cd front && npm run e2e
+```
+
+Les résultats de la recette et la matrice de traçabilité sont dans le [plan de test](docs/tests/TestPlan.md).
 
 ## Données
 
