@@ -1,0 +1,32 @@
+# Données et journaux locaux (credentials.json contient la clé JWT)
+data/
+logs/
+**/data/
+**/logs/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+TestResults/
+coverage/
+
+# Angular / Node (compléments de front/.gitignore)
+node_modules/
+dist/
+.angular/
+test-results/
+playwright-report/
+
+# API : front compilé copié pour le mode production locale
+back/src/FinanceReport.Api/wwwroot/
+
+# Éditeurs et OS
+.DS_Store
+.idea/
+.vs/
+.obsidian/workspace.json
+
+# Réglages locaux Claude Code
+.claude/settings.local.json
