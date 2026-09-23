@@ -1,0 +1,120 @@
+<div class="page">
+  <app-page-header title="Référentiels" subtitle="Listes de valeurs utilisées par les supports et les comptes">
+    <label class="toggle">
+      <input type="checkbox" [checked]="includeArchived()" (change)="includeArchived.set($any($event.target).checked)" />
+      Afficher les archivés
+    </label>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      <app-icon name="plus" />{{ info().feminine ? 'Nouvelle' : 'Nouveau' }} {{ info().singular }}
+    </button>
+  </app-page-header>
+
+  <nav class="tabs" aria-label="Référentiels">
+    @for (k of kinds; track k.kind) {
+      <a class="tab" [routerLink]="['/referentials', k.kind]" [attr.aria-current]="k.kind === info().kind ? 'page' : null">
+        {{ k.tab }} <span class="count">{{ lists()[k.kind].length }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="with-panel">
+    <section class="card table-card main">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">{{ info().hasCode ? 'Libellé' : 'Nom' }}</th>
+            @if (info().hasCode) {
+              <th scope="col">Code</th>
+            }
+            <th scope="col">Utilisation</th>
+            <th scope="col">Statut</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr [class.tr-archived]="item.archived">
+              <td class="strong">{{ item.label }}</td>
+              @if (info().hasCode) {
+                <td><code>{{ item.code }}</code></td>
+              }
+              <td>{{ info().usage(item.usageCount) }}</td>
+              <td>
+                <span class="badge" [class.success]="!item.archived">{{ item.archived ? 'Archivé' : 'Actif' }}</span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="icon-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(item)">
+                    <app-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    [attr.aria-label]="item.archived ? 'Désarchiver' : 'Archiver'"
+                    [title]="item.archived ? 'Désarchiver' : 'Archiver'"
+                    (click)="toggleArchived(item)"
+                  >
+                    <app-icon [name]="item.archived ? 'restore' : 'archive'" />
+                  </button>
+                  @if (item.usageCount === 0) {
+                    <button type="button" class="icon-btn danger" aria-label="Supprimer" title="Supprimer" (click)="remove(item)">
+                      <app-icon name="trash" />
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td class="empty" [attr.colspan]="info().hasCode ? 5 : 4">Aucune valeur.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    @if (panel(); as p) {
+      <app-side-panel [title]="panelTitle()" (closed)="panel.set(null)">
+        <form class="panel-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <div class="field">
+            <label for="ref-label">{{ info().hasCode ? 'Libellé' : 'Nom' }}</label>
+            <input id="ref-label" class="input" formControlName="label" maxlength="60" [attr.aria-invalid]="!!fieldError(error(), 'label')" />
+            @if (fieldError(error(), 'label'); as message) {
+              <span class="error">{{ message }}</span>
+            }
+          </div>
+
+          @if (info().hasCode) {
+            <div class="field">
+              <label for="ref-code">Code</label>
+              <input id="ref-code" class="input" formControlName="code" maxlength="40" [attr.aria-invalid]="!!fieldError(error(), 'code')" />
+              @if (codeLocked() && p.mode === 'edit') {
+                <span class="hint">Non modifiable : utilisé par {{ info().usage(p.item.usageCount) }}.</span>
+              } @else {
+                <span class="hint">Unique, en majuscules, sans espace (A-Z, 0-9, _). Il n'est plus modifiable dès qu'un support l'utilise.</span>
+              }
+              @if (fieldError(error(), 'code'); as message) {
+                <span class="error">{{ message }}</span>
+              }
+            </div>
+          } @else {
+            <p class="notice">Le nom est unique. Un établissement rattaché à un compte ne peut pas être supprimé, seulement archivé.</p>
+          }
+
+          @if (p.mode === 'edit' && p.item.usageCount > 0) {
+            <p class="notice">Le nouveau libellé s'appliquera partout où la valeur est utilisée.</p>
+          }
+
+          <div class="form-message" role="status" aria-live="polite">{{ error()?.message }}</div>
+
+          <div class="panel-actions">
+            <button type="button" class="btn btn-secondary" (click)="panel.set(null)">Annuler</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">
+              {{ p.mode === 'edit' ? 'Enregistrer' : 'Créer' }}
+            </button>
+          </div>
+        </form>
+      </app-side-panel>
+    }
+  </div>
+</div>

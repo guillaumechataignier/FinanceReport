@@ -42,6 +42,8 @@ export const ICONS = {
   check: { paths: ['M20 6 9 17l-5-5'] },
   sortDown: { paths: ['M12 5v14', 'm6 13 6 6 6-6'] },
   sortUp: { paths: ['M12 19V5', 'm6 11 6-6 6 6'] },
+  chevronLeft: { paths: ['m15 18-6-6 6-6'] },
+  chevronRight: { paths: ['m9 18 6-6-6-6'] },
 } satisfies Record<string, IconShape>;
 
 export type IconName = keyof typeof ICONS;

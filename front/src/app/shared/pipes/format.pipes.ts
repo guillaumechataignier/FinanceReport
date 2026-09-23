@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { formatAmount, formatDate, formatPercent } from './format';
+import { formatAmount, formatDate, formatPercent, formatPrice, formatQuantity } from './format';
 
 @Pipe({ name: 'amountFr' })
 export class AmountFrPipe implements PipeTransform {
@@ -20,5 +20,19 @@ export class PercentFrPipe implements PipeTransform {
 export class DateFrPipe implements PipeTransform {
   transform(value: string | null | undefined): string {
     return formatDate(value);
+  }
+}
+
+@Pipe({ name: 'priceFr' })
+export class PriceFrPipe implements PipeTransform {
+  transform(value: number | null | undefined, maxDecimals = 2): string {
+    return formatPrice(value, maxDecimals);
+  }
+}
+
+@Pipe({ name: 'quantityFr' })
+export class QuantityFrPipe implements PipeTransform {
+  transform(value: number | null | undefined): string {
+    return formatQuantity(value);
   }
 }

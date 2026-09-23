@@ -1,0 +1,101 @@
+<h2 mat-dialog-title>{{ editing ? 'Modifier le mouvement' : 'Nouveau mouvement' }}</h2>
+<mat-dialog-content>
+  <form id="movement-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    <div class="segmented" role="group" aria-label="Type de mouvement">
+      @for (t of types; track t) {
+        <button type="button" [attr.aria-pressed]="type() === t" [disabled]="editing && type() !== t" (click)="type.set(t)">
+          {{ typeLabels[t] }}
+        </button>
+      }
+    </div>
+    @if (editing) {
+      <span class="hint">Le type d'un mouvement n'est pas modifiable.</span>
+    }
+
+    <div class="row">
+      <div class="field">
+        <label for="movement-date">Date</label>
+        <input id="movement-date" class="input" type="date" [max]="today" formControlName="date" [attr.aria-invalid]="!!fieldError(error(), 'date')" />
+        @if (fieldError(error(), 'date'); as message) {
+          <span class="error">{{ message }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="movement-account">Compte titres</label>
+        <select id="movement-account" class="select" formControlName="accountId" [attr.aria-invalid]="!!fieldError(error(), 'accountId')">
+          <option value="" disabled>Choisir un compte</option>
+          @for (account of accountOptions; track account.id) {
+            <option [value]="account.id">{{ account.name }}{{ account.archived ? ' (archivé)' : '' }}</option>
+          }
+        </select>
+        @if (fieldError(error(), 'accountId'); as message) {
+          <span class="error">{{ message }}</span>
+        }
+      </div>
+    </div>
+
+    @if (isTrade()) {
+      <div class="field">
+        <label for="movement-security">Support</label>
+        <select id="movement-security" class="select" formControlName="securityId" [attr.aria-invalid]="!!fieldError(error(), 'securityId')">
+          <option value="" disabled>Choisir un support</option>
+          @for (security of securityOptions; track security.id) {
+            <option [value]="security.id">{{ security.name }} · {{ security.code }}{{ security.archived ? ' (archivé)' : '' }}</option>
+          }
+        </select>
+        @if (fieldError(error(), 'securityId'); as message) {
+          <span class="error">{{ message }}</span>
+        }
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="movement-quantity">Quantité</label>
+          <input id="movement-quantity" class="input" inputmode="decimal" formControlName="quantity" [attr.aria-invalid]="!!fieldError(error(), 'quantity')" />
+          @if (fieldError(error(), 'quantity'); as message) {
+            <span class="error">{{ message }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="movement-price">Prix unitaire</label>
+          <div class="input-suffix">
+            <input id="movement-price" class="input" inputmode="decimal" placeholder="0,00" formControlName="unitPrice" [attr.aria-invalid]="!!fieldError(error(), 'unitPrice')" />
+            <span>€</span>
+          </div>
+          @if (fieldError(error(), 'unitPrice'); as message) {
+            <span class="error">{{ message }}</span>
+          }
+        </div>
+        <div class="field">
+          <label for="movement-fees">Frais</label>
+          <div class="input-suffix">
+            <input id="movement-fees" class="input" inputmode="decimal" formControlName="fees" [attr.aria-invalid]="!!fieldError(error(), 'fees')" />
+            <span>€</span>
+          </div>
+          @if (fieldError(error(), 'fees'); as message) {
+            <span class="error">{{ message }}</span>
+          }
+        </div>
+      </div>
+      <span class="hint">{{ precisionHint() }}</span>
+    } @else {
+      <div class="field">
+        <label for="movement-amount">Montant</label>
+        <div class="input-suffix">
+          <input id="movement-amount" class="input" inputmode="decimal" placeholder="0,00" formControlName="amount" [attr.aria-invalid]="!!fieldError(error(), 'amount')" />
+          <span>€</span>
+        </div>
+        @if (fieldError(error(), 'amount'); as message) {
+          <span class="error">{{ message }}</span>
+        }
+        <span class="hint">Trace un apport ou un retrait ; le solde de liquidités reste à saisir dans l'écran Comptes.</span>
+      </div>
+    }
+
+    <div class="form-message" role="status" aria-live="polite">{{ error()?.message }}</div>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button type="button" class="btn btn-secondary" (click)="cancel()">Annuler</button>
+  <button type="submit" form="movement-form" class="btn btn-primary" [disabled]="saving()">Enregistrer</button>
+</mat-dialog-actions>

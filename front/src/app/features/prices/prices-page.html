@@ -1,0 +1,71 @@
+<div class="page">
+  <app-page-header title="Cours" subtitle="Supports actifs · saisie manuelle" />
+
+  <div class="with-panel">
+    <section class="card table-card main">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Support</th>
+            <th scope="col" class="right">Dernier cours</th>
+            <th scope="col" class="right">Date</th>
+            <th scope="col" class="right">Saisie rapide</th>
+            <th scope="col"><span class="visually-hidden">Historique</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (security of securities(); track security.id) {
+            <tr [class.tr-selected]="selected()?.id === security.id">
+              <td>
+                <span class="strong">{{ security.name }}</span>
+                <div class="sub">{{ security.code }} · {{ typeLabels[security.type] }}</div>
+              </td>
+              <td class="right num">{{ security.lastPrice | priceFr: priceDecimals(security.type) }}</td>
+              <td class="right num">{{ security.lastPriceDate | dateFr }}</td>
+              <td class="right"><app-price-quick-entry [security]="security" (saved)="onSaved(security)" /></td>
+              <td class="right">
+                <button type="button" class="btn btn-ghost" (click)="openHistory(security)">
+                  <app-icon name="history" [size]="16" />Historique
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td class="empty" colspan="5">Aucun support actif. Créez un support dans l'écran « Supports ».</td></tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    @if (selected(); as security) {
+      <app-side-panel [title]="'Historique · ' + security.name" (closed)="selected.set(null)">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col" class="right">Cours</th>
+              <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (price of history(); track price.date) {
+              <tr>
+                <td>{{ price.date | dateFr }}</td>
+                <td class="right num">{{ price.price | priceFr: priceDecimals(security.type) }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="icon-btn danger" aria-label="Supprimer le cours" title="Supprimer" (click)="deletePrice(price)">
+                      <app-icon name="trash" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td class="empty" colspan="3">Aucun cours saisi : les positions sont valorisées au PRU.</td></tr>
+            }
+          </tbody>
+        </table>
+        <p class="sub">Un cours existant à la même date est remplacé.</p>
+      </app-side-panel>
+    }
+  </div>
+</div>

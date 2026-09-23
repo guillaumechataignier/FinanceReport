@@ -1,0 +1,197 @@
+<div class="page">
+  <app-page-header
+    title="Comptes"
+    [subtitle]="'Patrimoine total : ' + (netWorth() | amountFr) + ' · ' + activeCount() + ' compte' + (activeCount() > 1 ? 's' : '') + ' actif' + (activeCount() > 1 ? 's' : '')"
+  >
+    <label class="toggle">
+      <input type="checkbox" [checked]="includeArchived()" (change)="includeArchived.set($any($event.target).checked)" />
+      Afficher les archivés
+    </label>
+    <button type="button" class="btn btn-primary" (click)="openCreate()"><app-icon name="plus" />Nouveau compte</button>
+  </app-page-header>
+
+  <div class="with-panel">
+    <section class="card table-card main">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Nom</th>
+            <th scope="col">Type</th>
+            <th scope="col">Catégorie</th>
+            <th scope="col">Établissement</th>
+            <th scope="col" class="right">Valeur actuelle</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of accounts(); track account.id) {
+            <tr [class.tr-archived]="account.archived" [class.tr-selected]="panelAccount()?.id === account.id">
+              <td>
+                <span class="strong">{{ account.name }}</span>
+                @if (account.archived) {
+                  <span class="badge" style="margin-left: 8px">Archivé</span>
+                }
+              </td>
+              <td>{{ account.type }}</td>
+              <td>{{ categoryLabels[account.category] }}</td>
+              <td>{{ account.institutionName }}{{ account.institutionArchived ? ' (archivé)' : '' }}</td>
+              <td class="right">
+                <span class="strong num">{{ account.currentValue | amountFr }}</span>
+                <div class="sub">
+                  @if (account.archived) {
+                    exclu du patrimoine
+                  } @else if (account.category === 'TITRES') {
+                    dont liquidités {{ account.cash | amountFr }}{{ account.cashDate ? ' au ' + (account.cashDate | dateFr) : '' }}
+                  } @else if (account.cashDate) {
+                    solde au {{ account.cashDate | dateFr }}
+                  } @else {
+                    aucun solde saisi
+                  }
+                </div>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="icon-btn" aria-label="Historique des soldes" title="Historique des soldes" (click)="openBalances(account)">
+                    <app-icon name="history" />
+                  </button>
+                  <button type="button" class="icon-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(account)">
+                    <app-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    [attr.aria-label]="account.archived ? 'Désarchiver' : 'Archiver'"
+                    [title]="account.archived ? 'Désarchiver' : 'Archiver'"
+                    (click)="toggleArchived(account)"
+                  >
+                    <app-icon [name]="account.archived ? 'restore' : 'archive'" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td class="empty" colspan="6">Aucun compte. Créez votre premier compte avec « Nouveau compte ».</td></tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    @switch (panel()?.mode) {
+      @case ('balances') {
+        @let account = panelAccount()!;
+        <app-side-panel [title]="'Soldes · ' + account.name" (closed)="panel.set(null)">
+          <p class="sub" style="margin: -10px 0 0">{{ account.category === 'TITRES' ? 'Liquidités du compte titres' : 'Solde du compte' }}</p>
+          @if (account.archived) {
+            <p class="notice">Le compte est archivé : désarchivez-le pour saisir ou supprimer un solde.</p>
+          } @else {
+            <form class="panel-form" [formGroup]="balanceForm" (ngSubmit)="saveBalance()" novalidate>
+              <div style="display: flex; gap: 12px">
+                <div class="field" style="flex: 1">
+                  <label for="balance-date">Date</label>
+                  <input id="balance-date" class="input" type="date" [max]="today" formControlName="date" />
+                </div>
+                <div class="field" style="flex: 1">
+                  <label for="balance-amount">Montant</label>
+                  <div class="input-suffix">
+                    <input id="balance-amount" class="input" inputmode="decimal" placeholder="0,00" formControlName="amount" />
+                    <span>€</span>
+                  </div>
+                </div>
+              </div>
+              <span class="hint sub">Un solde existant à la même date est remplacé.</span>
+              <div class="form-message" role="status" aria-live="polite">{{ error()?.message }}</div>
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">Enregistrer le solde</button>
+            </form>
+          }
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col" class="right">Solde</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (balance of balances(); track balance.date) {
+                <tr>
+                  <td>{{ balance.date | dateFr }}</td>
+                  <td class="right num">{{ balance.amount | amountFr }}</td>
+                  <td>
+                    @if (!account.archived) {
+                      <div class="row-actions">
+                        <button type="button" class="icon-btn danger" aria-label="Supprimer le solde" title="Supprimer" (click)="deleteBalance(balance)">
+                          <app-icon name="trash" />
+                        </button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td class="empty" colspan="3">Aucun solde saisi.</td></tr>
+              }
+            </tbody>
+          </table>
+        </app-side-panel>
+      }
+      @case ('create') {
+        <ng-container *ngTemplateOutlet="accountFormTemplate; context: { title: 'Nouveau compte' }" />
+      }
+      @case ('edit') {
+        <ng-container *ngTemplateOutlet="accountFormTemplate; context: { title: 'Modifier le compte' }" />
+      }
+    }
+  </div>
+</div>
+
+<ng-template #accountFormTemplate let-title="title">
+  <app-side-panel [title]="title" (closed)="panel.set(null)">
+    <form class="panel-form" [formGroup]="accountForm" (ngSubmit)="saveAccount()" novalidate>
+      <div class="field">
+        <label for="account-name">Nom</label>
+        <input id="account-name" class="input" formControlName="name" maxlength="100" [attr.aria-invalid]="!!fieldError(error(), 'name')" />
+        @if (fieldError(error(), 'name'); as message) {
+          <span class="error">{{ message }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="account-type">Type</label>
+        <select id="account-type" class="select" formControlName="type" [attr.aria-invalid]="!!fieldError(error(), 'type')">
+          <option value="" disabled>Choisir un type</option>
+          @for (type of accountTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+        <span class="hint">Non modifiable dès que le compte a un mouvement ou un solde.</span>
+        @if (fieldError(error(), 'type'); as message) {
+          <span class="error">{{ message }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="account-institution">Établissement</label>
+        @if (institutionOptions().length === 0) {
+          <p class="notice">Aucun établissement actif. <a routerLink="/referentials/institutions">Créez-en un dans l'écran Référentiels.</a></p>
+        } @else {
+          <select id="account-institution" class="select" formControlName="institutionId" [attr.aria-invalid]="!!fieldError(error(), 'institutionId')">
+            <option value="" disabled>Choisir un établissement</option>
+            @for (option of institutionOptions(); track option.id) {
+              <option [value]="option.id">{{ option.label }}</option>
+            }
+          </select>
+        }
+        @if (fieldError(error(), 'institutionId'); as message) {
+          <span class="error">{{ message }}</span>
+        }
+      </div>
+
+      <div class="form-message" role="status" aria-live="polite">{{ error()?.message }}</div>
+
+      <div class="panel-actions">
+        <button type="button" class="btn btn-secondary" (click)="panel.set(null)">Annuler</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ title === 'Nouveau compte' ? 'Créer le compte' : 'Enregistrer' }}</button>
+      </div>
+    </form>
+  </app-side-panel>
+</ng-template>

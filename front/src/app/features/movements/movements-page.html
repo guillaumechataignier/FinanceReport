@@ -1,0 +1,97 @@
+<div class="page">
+  <app-page-header title="Mouvements" subtitle="Historique trié par date décroissante">
+    <button type="button" class="btn btn-primary" (click)="openDialog()"><app-icon name="plus" />Nouveau mouvement</button>
+  </app-page-header>
+
+  <section class="card filters" [formGroup]="filters" aria-label="Filtres">
+    <div class="field">
+      <label for="filter-account">Compte</label>
+      <select id="filter-account" class="select" formControlName="accountId">
+        <option value="">Tous les comptes</option>
+        @for (account of accounts(); track account.id) {
+          <option [value]="account.id">{{ account.name }}{{ account.archived ? ' (archivé)' : '' }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filter-security">Support</label>
+      <select id="filter-security" class="select" formControlName="securityId">
+        <option value="">Tous les supports</option>
+        @for (security of securities(); track security.id) {
+          <option [value]="security.id">{{ security.name }}{{ security.archived ? ' (archivé)' : '' }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filter-type">Type</label>
+      <select id="filter-type" class="select" formControlName="type">
+        <option value="">Tous les types</option>
+        @for (type of types; track type) {
+          <option [value]="type">{{ typeLabels[type] }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filter-from">Du</label>
+      <input id="filter-from" class="input" type="date" formControlName="from" />
+    </div>
+    <div class="field">
+      <label for="filter-to">Au</label>
+      <input id="filter-to" class="input" type="date" formControlName="to" />
+    </div>
+  </section>
+
+  <section class="card table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Type</th>
+          <th scope="col">Compte</th>
+          <th scope="col">Support</th>
+          <th scope="col" class="right">Quantité</th>
+          <th scope="col" class="right">Prix unitaire</th>
+          <th scope="col" class="right">Frais</th>
+          <th scope="col" class="right">Montant</th>
+          <th scope="col"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (movement of pageItems(); track movement.id) {
+          <tr>
+            <td class="num">{{ movement.date | dateFr }}</td>
+            <td>{{ typeLabels[movement.type] }}</td>
+            <td>{{ movement.accountName }}</td>
+            <td>{{ movement.securityName ?? '—' }}</td>
+            <td class="right num">{{ movement.quantity | quantityFr }}</td>
+            <td class="right num">{{ movement.unitPrice | priceFr: priceDecimalsOf(movement) }}</td>
+            <td class="right num">{{ movement.fees | amountFr }}</td>
+            <td class="right num strong">{{ movement.total | amountFr }}</td>
+            <td>
+              <div class="row-actions">
+                <button type="button" class="icon-btn" aria-label="Modifier" title="Modifier" (click)="openDialog(movement)">
+                  <app-icon name="edit" />
+                </button>
+                <button type="button" class="icon-btn danger" aria-label="Supprimer" title="Supprimer" (click)="remove(movement)">
+                  <app-icon name="trash" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td class="empty" colspan="9">Aucun mouvement pour ces critères.</td></tr>
+        }
+      </tbody>
+    </table>
+    <div class="pager">
+      <span class="muted">50 lignes par page</span>
+      <span class="num">{{ range() }}</span>
+      <button type="button" class="icon-btn" aria-label="Page précédente" [disabled]="page() === 0" (click)="page.set(page() - 1)">
+        <app-icon name="chevronLeft" [size]="16" />
+      </button>
+      <button type="button" class="icon-btn" aria-label="Page suivante" [disabled]="page() >= pageCount() - 1" (click)="page.set(page() + 1)">
+        <app-icon name="chevronRight" [size]="16" />
+      </button>
+    </div>
+  </section>
+</div>

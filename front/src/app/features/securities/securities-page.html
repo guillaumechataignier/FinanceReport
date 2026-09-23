@@ -1,0 +1,124 @@
+<div class="page">
+  <app-page-header title="Supports" subtitle="Référentiel des instruments financiers">
+    <label class="toggle">
+      <input type="checkbox" [checked]="includeArchived()" (change)="includeArchived.set($any($event.target).checked)" />
+      Afficher les archivés
+    </label>
+    <button type="button" class="btn btn-primary" (click)="openCreate()"><app-icon name="plus" />Nouveau support</button>
+  </app-page-header>
+
+  <div class="with-panel">
+    <section class="card table-card main">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Nom</th>
+            <th scope="col">Code (ISIN / ticker)</th>
+            <th scope="col">Type</th>
+            <th scope="col">Zone</th>
+            <th scope="col">Secteur</th>
+            <th scope="col">Statut</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (security of securities(); track security.id) {
+            <tr [class.tr-archived]="security.archived">
+              <td class="strong">{{ security.name }}</td>
+              <td><code>{{ security.code }}</code></td>
+              <td>{{ typeLabels[security.type] }}</td>
+              <td>{{ security.zoneLabel }}{{ security.zoneArchived ? ' (archivé)' : '' }}</td>
+              <td>{{ security.sectorLabel }}{{ security.sectorArchived ? ' (archivé)' : '' }}</td>
+              <td><span class="badge" [class.success]="!security.archived">{{ security.archived ? 'Archivé' : 'Actif' }}</span></td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="icon-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(security)">
+                    <app-icon name="edit" />
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    [attr.aria-label]="security.archived ? 'Désarchiver' : 'Archiver'"
+                    [title]="security.archived ? 'Désarchiver' : 'Archiver'"
+                    (click)="toggleArchived(security)"
+                  >
+                    <app-icon [name]="security.archived ? 'restore' : 'archive'" />
+                  </button>
+                  <button type="button" class="icon-btn danger" aria-label="Supprimer" title="Supprimer" (click)="remove(security)">
+                    <app-icon name="trash" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td class="empty" colspan="7">Aucun support.</td></tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    @if (panel(); as p) {
+      <app-side-panel [title]="p.mode === 'edit' ? 'Modifier le support' : 'Nouveau support'" (closed)="panel.set(null)">
+        <form class="panel-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <div class="field">
+            <label for="security-name">Nom</label>
+            <input id="security-name" class="input" formControlName="name" maxlength="100" [attr.aria-invalid]="!!fieldError(error(), 'name')" />
+            @if (fieldError(error(), 'name'); as message) {
+              <span class="error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="security-code">Code (ISIN ou ticker)</label>
+            <input id="security-code" class="input" formControlName="code" maxlength="30" [attr.aria-invalid]="!!fieldError(error(), 'code')" />
+            @if (fieldError(error(), 'code'); as message) {
+              <span class="error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="security-type">Type</label>
+            <select id="security-type" class="select" formControlName="type">
+              <option value="" disabled>Choisir un type</option>
+              @for (type of types; track type) {
+                <option [value]="type">{{ typeLabels[type] }}</option>
+              }
+            </select>
+            @if (fieldError(error(), 'type'); as message) {
+              <span class="error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="security-zone">Zone géographique</label>
+            <select id="security-zone" class="select" formControlName="zone">
+              <option value="" disabled>Choisir une zone</option>
+              @for (option of zoneOptions(); track option.code) {
+                <option [value]="option.code">{{ option.label }}</option>
+              }
+            </select>
+            @if (fieldError(error(), 'zone'); as message) {
+              <span class="error">{{ message }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="security-sector">Secteur</label>
+            <select id="security-sector" class="select" formControlName="sector">
+              <option value="" disabled>Choisir un secteur</option>
+              @for (option of sectorOptions(); track option.code) {
+                <option [value]="option.code">{{ option.label }}</option>
+              }
+            </select>
+            @if (fieldError(error(), 'sector'); as message) {
+              <span class="error">{{ message }}</span>
+            }
+          </div>
+
+          <div class="form-message" role="status" aria-live="polite">{{ error()?.message }}</div>
+
+          <div class="panel-actions">
+            <button type="button" class="btn btn-secondary" (click)="panel.set(null)">Annuler</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ p.mode === 'edit' ? 'Enregistrer' : 'Créer le support' }}</button>
+          </div>
+        </form>
+      </app-side-panel>
+    }
+  </div>
+</div>
