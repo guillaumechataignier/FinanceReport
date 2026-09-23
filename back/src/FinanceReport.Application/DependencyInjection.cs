@@ -10,6 +10,11 @@ public static class DependencyInjection
     {
         services.AddValidatorsFromAssemblyContaining<AuthService>(ServiceLifetime.Singleton);
         services.AddSingleton<AuthService>();
+        services.AddSingleton<SnapshotService>();
+        services.AddSingleton<ReferentialService>();
+        services.AddSingleton<AccountService>();
+        services.AddSingleton<BalanceService>();
+        services.AddSingleton<SecurityService>();
         return services;
     }
 }

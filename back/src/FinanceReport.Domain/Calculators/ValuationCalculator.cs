@@ -11,27 +11,34 @@ public static class ValuationCalculator
         IEnumerable<Account> accounts,
         IEnumerable<Movement> movements,
         IEnumerable<Balance> balances,
-        IEnumerable<SecurityPrice> prices) =>
+        IEnumerable<SecurityPrice> prices,
+        bool includeArchived = false) =>
         Valuate(
             asOf,
             accounts,
             PositionCalculator.Compute(movements, asOf),
             DatedSeries<Guid>.Create(balances, b => b.AccountId, b => b.Date, b => b.Amount),
-            DatedSeries<Guid>.Create(prices, p => p.SecurityId, p => p.Date, p => p.Price));
+            DatedSeries<Guid>.Create(prices, p => p.SecurityId, p => p.Date, p => p.Price),
+            includeArchived);
 
     /// <summary>
     /// Variante qui reçoit des positions déjà rejouées jusqu'à <paramref name="asOf"/> et des séries indexées,
     /// pour les reconstructions de snapshots en un seul passage chronologique.
     /// </summary>
+    /// <param name="includeArchived">
+    /// Valorise aussi les comptes archivés (écran Comptes). Le patrimoine total les inclut alors : réservé à l'affichage
+    /// de la valeur d'un compte, jamais aux restitutions (RG-27).
+    /// </param>
     public static Valuation Valuate(
         DateOnly asOf,
         IEnumerable<Account> accounts,
         IReadOnlyDictionary<PositionKey, PositionState> positions,
         DatedSeries<Guid> balances,
-        DatedSeries<Guid> prices)
+        DatedSeries<Guid> prices,
+        bool includeArchived = false)
     {
         // RG-27 : les comptes archivés sont exclus ; seules les positions des comptes titres sont valorisées (RG-21).
-        var activeAccounts = accounts.Where(a => !a.Archived).ToList();
+        var activeAccounts = accounts.Where(a => includeArchived || !a.Archived).ToList();
         var securitiesAccountIds = activeAccounts
             .Where(a => a.Type.IsSecuritiesAccount())
             .Select(a => a.Id)

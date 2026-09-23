@@ -2,7 +2,7 @@
 
 |Élément|Valeur|
 |---|---|
-|Version|1.2 – MVP|
+|Version|1.3 – MVP|
 |Date|23/09/2026|
 |Document source|`docs/brd/BRD.md` v1.1|
 |Maquettes|Canevas « FinanceReport – Maquettes MVP » (écrans nominaux)|
@@ -14,6 +14,7 @@
 |1.0|23/09/2026|Version initiale|
 |1.1|23/09/2026|Référentiels administrables (zones, secteurs, établissements) : UC-14, RG-24 révisée, RG-30, section 3.11, API des référentiels, écran « Référentiels ». Établissement du compte choisi dans un référentiel. Section UI alignée sur les maquettes.|
 |1.2|23/09/2026|Établissement obligatoire sur un compte (UC-03, section 3.2, API, RG-24).|
+|1.3|23/09/2026|Alignement API ↔ maquettes : valeur actuelle et dernier solde dans la réponse des comptes, dernier cours dans la réponse des supports, indicateurs « archivé » des valeurs de référentiel portées, `GET` unitaire des comptes et des supports, suppression d'un solde depuis l'écran Comptes.|
 
 ---
 
@@ -375,7 +376,8 @@ json
 
 |Méthode|Chemin|Description|
 |---|---|---|
-|GET|`/api/accounts?includeArchived=false`|Liste des comptes|
+|GET|`/api/accounts?includeArchived=false`|Liste des comptes (comptes archivés en dernier)|
+|GET|`/api/accounts/{id}`|Détail d'un compte|
 |POST|`/api/accounts`|Création|
 |PUT|`/api/accounts/{id}`|Modification (nom, établissement ; type sous condition de RG-21)|
 |POST|`/api/accounts/{id}/archive`|Archivage|
@@ -388,8 +390,13 @@ json
 
 ```json
   { "id": "3f2a...", "name": "PEA Boursorama", "type": "PEA", "category": "TITRES",
-    "institutionId": "5b7e...", "institutionName": "Boursorama", "archived": false }
+    "institutionId": "5b7e...", "institutionName": "Boursorama", "institutionArchived": false,
+    "archived": false, "currentValue": 1235.00, "cash": 200.00, "cashDate": "2026-09-01" }
 ```
+
+- `currentValue` : valeur du compte à la date du jour (RG-07, RG-08), calculée aussi pour un compte archivé, qui reste exclu du patrimoine (RG-27).
+- `cash` et `cashDate` : dernier solde de date ≤ aujourd'hui (liquidités pour un compte titres) ; `0` et `null` sans solde saisi.
+- `institutionArchived` : vrai si l'établissement porté est archivé (affichage « (archivé) »).
 
 #### Soldes
 
@@ -407,6 +414,7 @@ json
 |Méthode|Chemin|Description|
 |---|---|---|
 |GET|`/api/securities?includeArchived=false`|Liste|
+|GET|`/api/securities/{id}`|Détail d'un support|
 |POST|`/api/securities`|Création|
 |PUT|`/api/securities/{id}`|Modification|
 |POST|`/api/securities/{id}/archive`|Archivage|
@@ -422,7 +430,7 @@ json
     "zone": "MONDE", "sector": "DIVERSIFIE" }
 ```
 
-- **Réponse** : les champs de la requête, plus `id`, `archived`, `zoneLabel` et `sectorLabel` (libellés courants).
+- **Réponse** : les champs de la requête, plus `id`, `archived`, `zoneLabel` et `sectorLabel` (libellés courants), `zoneArchived` et `sectorArchived` (valeur portée archivée), `lastPrice` et `lastPriceDate` (dernier cours saisi, arrondi selon RG-29 ; `null` sans cours).
 
 #### Référentiels
 
@@ -547,7 +555,7 @@ L'interface est en français. Elle comporte un menu latéral : Accueil, Tableau 
 |Accueil|4 tuiles d'indicateurs (patrimoine total, variation du mois en €, variation du mois en %, plus-value latente) ; courbe d'évolution avec sélecteur 1M / 1A / Tout ; graphique en anneau par type de compte ; bandeau de cours manquants ; raccourci « Nouveau mouvement »|
 |Tableau de bord|Barre de filtres ; 4 graphiques de répartition ; tableau des positions (tri sur chaque colonne) ; tableau des comptes avec ligne de total|
 |Mouvements|Filtres ; tableau paginé (50 lignes par page) ; bouton « Nouveau mouvement » ; formulaire modal dont les champs dépendent du type (sélecteur Achat / Vente / Versement / Retrait) ; actions Modifier et Supprimer, avec confirmation|
-|Comptes|Liste avec le type, la catégorie, l'établissement et la valeur actuelle ; option « Afficher les archivés » ; création et modification (établissement choisi dans le référentiel) ; archivage ; panneau latéral d'historique des soldes et de saisie d'un solde|
+|Comptes|Liste avec le type, la catégorie, l'établissement et la valeur actuelle ; option « Afficher les archivés » ; création et modification (établissement choisi dans le référentiel) ; archivage ; panneau latéral d'historique des soldes, de saisie et de suppression d'un solde (avec confirmation)|
 |Supports|Liste avec le code, le type, la zone, le secteur et le statut ; option « Afficher les archivés » ; création et modification (zone et secteur choisis dans les référentiels) ; archivage et suppression|
 |Cours|Tableau des supports actifs avec le dernier cours et sa date ; saisie rapide d'un cours par ligne ; panneau d'historique par support|
 |Référentiels|Onglets Zones géographiques, Secteurs, Établissements, avec le nombre de valeurs ; liste avec libellé, code, utilisation et statut ; option « Afficher les archivés » ; panneau latéral de création ou de modification (code verrouillé si la valeur est utilisée) ; actions Modifier, Archiver, et Supprimer (proposée uniquement pour une valeur non utilisée)|
