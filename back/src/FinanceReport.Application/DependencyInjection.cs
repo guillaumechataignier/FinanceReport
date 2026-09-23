@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddSingleton<SecurityService>();
         services.AddSingleton<MovementService>();
         services.AddSingleton<PriceService>();
+        services.AddSingleton<DashboardService>();
         return services;
     }
 }
