@@ -1,0 +1,28 @@
+<app-auth-frame>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div>
+      <h1 class="display">Connexion</h1>
+      <p class="intro">Connectez-vous pour accéder à vos comptes.</p>
+    </div>
+
+    @if (created()) {
+      <p class="info" role="status">Compte créé. Connectez-vous avec vos identifiants.</p>
+    }
+
+    <div class="field">
+      <label for="username">Identifiant</label>
+      <input id="username" class="input" type="text" autocomplete="username" formControlName="username" />
+    </div>
+
+    <div class="field">
+      <label for="password">Mot de passe</label>
+      <input id="password" class="input" type="password" autocomplete="current-password" formControlName="password" />
+    </div>
+
+    <div class="form-message" role="status" aria-live="polite">{{ lockMessage() ?? error() }}</div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting() || lockSeconds() > 0">Se connecter</button>
+
+    <div class="note"><app-icon name="lock" [size]="15" />Session valable 8 heures</div>
+  </form>
+</app-auth-frame>

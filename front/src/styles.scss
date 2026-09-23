@@ -1,39 +1,319 @@
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// Thème FinanceReport, repris du canevas « FinanceReport – Maquettes MVP » :
+// fond grège, barre latérale vert sapin, accent vert, Fraunces pour les titres, IBM Plex Sans pour le texte.
 @use '@angular/material' as mat;
+
+:root {
+  --fr-bg: #f4f3ee;
+  --fr-surface: #ffffff;
+  --fr-surface-muted: #eceae3;
+  --fr-border: #e3e1d9;
+  --fr-text: #1a1f24;
+  --fr-muted: #56606b;
+  --fr-primary: #1f6f5c;
+  --fr-primary-hover: #15503f;
+  --fr-accent: #7fd1b5;
+  --fr-sidebar: #14302a;
+  --fr-sidebar-text: #d7e3de;
+  --fr-sidebar-muted: #9db3ab;
+  --fr-gain: #1b7a43;
+  --fr-loss: #b42318;
+  --fr-warning: #9a6700;
+  --fr-series-2: #b8893a;
+  --fr-radius-card: 14px;
+  --fr-radius: 8px;
+  --fr-control-height: 44px;
+  --fr-font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --fr-font-display: 'Fraunces Variable', Georgia, serif;
+}
 
 html {
   height: 100%;
   @include mat.theme(
     (
       color: (
-        primary: mat.$azure-palette,
-        tertiary: mat.$blue-palette,
+        primary: mat.$green-palette,
+        theme-type: light,
       ),
-      typography: Roboto,
+      typography: (
+        plain-family: 'IBM Plex Sans',
+        brand-family: 'Fraunces Variable',
+      ),
       density: 0,
+    )
+  );
+  @include mat.theme-overrides(
+    (
+      primary: #1f6f5c,
+      on-primary: #ffffff,
+      surface: #ffffff,
+      on-surface: #1a1f24,
+      on-surface-variant: #56606b,
+      outline: #e3e1d9,
+      error: #b42318,
     )
   );
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
   color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
   margin: 0;
   height: 100%;
+  background: var(--fr-bg);
+  color: var(--fr-text);
+  font-family: var(--fr-font-body);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
 }
-/* You can add global styles to this file, and also import other style files */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--fr-primary);
+}
+
+a:hover {
+  color: var(--fr-primary-hover);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+.display {
+  font-family: var(--fr-font-display);
+  letter-spacing: -0.015em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.muted {
+  color: var(--fr-muted);
+}
+
+.gain {
+  color: var(--fr-gain);
+}
+
+.loss {
+  color: var(--fr-loss);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// Boutons
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--fr-control-height);
+  padding: 0 18px;
+  border-radius: var(--fr-radius);
+  border: 1px solid transparent;
+  font: 600 15px var(--fr-font-body);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--fr-primary);
+    outline-offset: 2px;
+  }
+}
+
+.btn-primary {
+  background: var(--fr-primary);
+  border-color: var(--fr-primary);
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    background: var(--fr-primary-hover);
+    color: #ffffff;
+  }
+}
+
+.btn-secondary {
+  background: var(--fr-surface);
+  border-color: var(--fr-primary);
+  color: var(--fr-primary);
+
+  &:hover:not(:disabled) {
+    background: #eef6f3;
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--fr-primary);
+  padding: 0 10px;
+
+  &:hover:not(:disabled) {
+    background: #eef6f3;
+  }
+}
+
+.btn-danger {
+  background: var(--fr-loss);
+  border-color: var(--fr-loss);
+  color: #ffffff;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--fr-radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fr-muted);
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    background: var(--fr-surface-muted);
+    color: var(--fr-text);
+  }
+
+  &.danger {
+    color: var(--fr-loss);
+  }
+}
+
+// Champs de formulaire
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--fr-muted);
+  }
+
+  .hint {
+    font-size: 13px;
+    color: var(--fr-muted);
+  }
+
+  .error {
+    font-size: 13px;
+    color: var(--fr-loss);
+  }
+}
+
+.input,
+.select {
+  width: 100%;
+  height: var(--fr-control-height);
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius);
+  background: var(--fr-surface);
+  padding: 0 12px;
+  font: 15px var(--fr-font-body);
+  color: var(--fr-text);
+  font-variant-numeric: tabular-nums;
+
+  &:focus {
+    outline: 2px solid var(--fr-primary);
+    outline-offset: -1px;
+    border-color: var(--fr-primary);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--fr-loss);
+  }
+
+  &:disabled,
+  &[readonly] {
+    background: var(--fr-surface-muted);
+    color: var(--fr-muted);
+  }
+}
+
+.form-message {
+  min-height: 20px;
+  font-size: 14px;
+  color: var(--fr-loss);
+}
+
+// Cartes et tableaux
+.card {
+  background: var(--fr-surface);
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-card);
+  padding: 24px;
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--fr-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--fr-border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 14px;
+    border-bottom: 1px solid var(--fr-border);
+    font-size: 15px;
+    vertical-align: middle;
+  }
+
+  .right {
+    text-align: right;
+  }
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--fr-surface-muted);
+  color: var(--fr-muted);
+
+  &.success {
+    background: #e3f2ea;
+    color: var(--fr-gain);
+  }
+}

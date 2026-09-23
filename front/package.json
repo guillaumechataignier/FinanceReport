@@ -19,6 +19,8 @@
     "@angular/material": "^22.2.0",
     "@angular/platform-browser": "^22.1.0",
     "@angular/router": "^22.1.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
     "@swimlane/ngx-charts": "^25.0.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

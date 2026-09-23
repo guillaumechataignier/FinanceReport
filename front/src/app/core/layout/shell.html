@@ -1,0 +1,36 @@
+<div class="shell">
+  <nav aria-label="Navigation principale" class="sidebar">
+    <div class="brand">
+      <span class="logo"><app-icon name="trend" [size]="20" [strokeWidth]="2.2" /></span>
+      <span class="display name">FinanceReport</span>
+    </div>
+
+    <div class="links">
+      @for (item of items; track item.path) {
+        <a
+          class="link"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+        >
+          <span class="marker"></span>
+          <app-icon [name]="item.icon" [size]="19" />
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </div>
+
+    <div class="footer">
+      <div class="user"><app-icon name="user" [size]="16" /><span>{{ auth.username() }}</span></div>
+      <button type="button" class="link logout" (click)="auth.logout()">
+        <app-icon name="logout" [size]="19" />
+        <span>Déconnexion</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
