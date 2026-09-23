@@ -39,7 +39,7 @@ public sealed class ReferentialSeedingTests : IDisposable
 
     private async Task StartAsync()
     {
-        await using var factory = new ApiFactory(_dataPath);
+        await using var factory = new ApiFactory(_dataPath, keepData: true);
         _ = factory.Services; // démarre l'hôte, donc l'initialisation des référentiels
     }
 

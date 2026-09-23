@@ -7,11 +7,7 @@ public sealed class StartupSmokeTests : IDisposable
 {
     private readonly ApiFactory _factory = new();
 
-    public void Dispose()
-    {
-        _factory.Dispose();
-        TestData.Delete(_factory.DataPath);
-    }
+    public void Dispose() => _factory.Dispose();
 
     [Fact]
     public async Task Api_starts_and_answers_404_on_unknown_route()

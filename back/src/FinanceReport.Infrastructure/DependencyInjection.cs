@@ -1,7 +1,9 @@
+using FinanceReport.Application.Abstractions;
 using FinanceReport.Domain.Abstractions;
 using FinanceReport.Domain.Entities;
 using FinanceReport.Infrastructure.Backup;
 using FinanceReport.Infrastructure.Persistence;
+using FinanceReport.Infrastructure.Authentication;
 using FinanceReport.Infrastructure.Time;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +33,11 @@ public static class DependencyInjection
         services.AddSingleton<ReferentialRepository>();
         services.AddSingleton<IReferentialRepository>(sp => sp.GetRequiredService<ReferentialRepository>());
         services.AddSingleton<ReferentialSeeder>();
+
+        services.AddSingleton<ICredentialsStore, CredentialsStore>();
+        services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<ILoginAttemptTracker, LoginAttemptTracker>();
 
         return services;
     }
