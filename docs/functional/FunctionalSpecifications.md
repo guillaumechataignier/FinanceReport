@@ -14,7 +14,7 @@
 |1.0|23/09/2026|Version initiale|
 |1.1|23/09/2026|Référentiels administrables (zones, secteurs, établissements) : UC-14, RG-24 révisée, RG-30, section 3.11, API des référentiels, écran « Référentiels ». Établissement du compte choisi dans un référentiel. Section UI alignée sur les maquettes.|
 |1.2|23/09/2026|Établissement obligatoire sur un compte (UC-03, section 3.2, API, RG-24).|
-|1.3|23/09/2026|Alignement API ↔ maquettes : valeur actuelle et dernier solde dans la réponse des comptes, dernier cours dans la réponse des supports, indicateurs « archivé » des valeurs de référentiel portées, `GET` unitaire des comptes et des supports, suppression d'un solde depuis l'écran Comptes.|
+|1.3|23/09/2026|Alignement API ↔ maquettes : valeur actuelle et dernier solde dans la réponse des comptes, dernier cours dans la réponse des supports, indicateurs « archivé » des valeurs de référentiel portées, `GET` unitaire des comptes, des supports et des mouvements, montant `total` et libellés dans la réponse des mouvements, suppression d'un solde depuis l'écran Comptes.|
 
 ---
 
@@ -463,7 +463,8 @@ Pour un établissement, `code` vaut `null`.
 
 |Méthode|Chemin|Description|
 |---|---|---|
-|GET|`/api/movements?accountId=&securityId=&type=&from=&to=`|Liste filtrée, triée par date décroissante|
+|GET|`/api/movements?accountId=&securityId=&type=&from=&to=`|Liste filtrée, triée par date décroissante (puis ordre de création décroissant)|
+|GET|`/api/movements/{id}`|Détail d'un mouvement|
 |POST|`/api/movements`|Création|
 |PUT|`/api/movements/{id}`|Modification (type non modifiable)|
 |DELETE|`/api/movements/{id}`|Suppression|
@@ -485,7 +486,7 @@ json
   { "type": "VERSEMENT", "date": "2026-09-01", "accountId": "3f2a...", "amount": 500.00 }
 ```
 
-- **Réponse 201** : le mouvement, avec `id`, `createdAt` et `updatedAt`.
+- **Réponse 201** : le mouvement, avec `id`, `sequence`, `createdAt` et `updatedAt`, plus `accountName`, `securityName` et `securityCode` (libellés courants) et `total`, le montant de l'opération (q × prix + frais pour un achat, q × prix − frais pour une vente, `amount` pour un versement ou un retrait), arrondi à 2 décimales.
 - **Erreur 422** :
 
 json
